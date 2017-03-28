@@ -43,7 +43,7 @@ islandspawn = function (n)
   schem_l.y = schem_l.y - 6
   schem_l.x = schem_l.x -7
   schem_l.z = schem_l.z -7
-  minetest.place_schematic(schem_l,minetest.get_modpath().."/schems/island.mts")
+  minetest.place_schematic(schem_l,minetest.get_modpath("eggwars").."/schems/island.mts")
 end
 
 minetest.register_node("eggwars:egg", {
