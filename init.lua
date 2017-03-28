@@ -43,7 +43,12 @@ islandspawn = function (n)
   schem_l.y = schem_l.y - 6
   schem_l.x = schem_l.x -7
   schem_l.z = schem_l.z -7
-  minetest.place_schematic(schem_l,minetest.get_modpath("eggwars").."/schems/island.mts")
+  local schempath = minetest.get_modpath("eggwars").."/schems";
+  local name = "island"
+  if  minetest.place_schematic(schem_l, schempath.."/"..name..".mts") == nil then
+    minetest.debug(minetest.pos_to_string(schem_l))
+  end
+  --minetest.place_schematic(schem_l,minetest.get_modpath("eggwars").."/schems/island.mts")
 end
 
 minetest.register_node("eggwars:egg", {
@@ -91,7 +96,7 @@ minetest.register_node("eggwars:steelspawn2", { --Faster spawn rate; for center 
 })
 
 minetest.register_node("eggwars:cobblespawn", {
-  tiles = {"default_diamond_block.png"},
+  tiles = {"default_cobble.png"},
   groups = {crumbly = 3} --Temporary, should be unbreakable
 })
 
@@ -172,10 +177,10 @@ minetest.register_on_joinplayer(function(player)
   minetest.set_player_privs(player_n, privs)
   if i >= 8 then
     minetest.set_node(waiting_area, {name = "default:dirt_with_grass"})
-    minetest.after(1, function () player:setpos(waiting_area) end)
+    player:setpos(waiting_area)
   else
     islandspawn(i)
-    minetest.after(1, function () player:setpos(islands[i]) end)
+    player:setpos(islands[i])
     player_i[player_n] = islands[i];
     i = i + 1;
   end
