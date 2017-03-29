@@ -38,18 +38,16 @@ end
 
 -- MTS place: y-7, z-7, x-7
 islandspawn = function (n)
-  minetest.set_node(islands[n],{name = "eggwars:egg"})
-  local schem_l = islands[n];
+  --minetest.set_node(islands[n],{name = "eggwars:egg"})
+  local schem_l = table.copy(islands[n]);
   schem_l.y = schem_l.y - 6
   schem_l.x = schem_l.x -7
   schem_l.z = schem_l.z -7
   local schempath = minetest.get_modpath("eggwars").."/schems";
   local name = "island"
-  if  minetest.place_schematic(schem_l, schempath.."/"..name..".mts") == nil then
-    minetest.debug(minetest.pos_to_string(schem_l))
-  end
-  --minetest.place_schematic(schem_l,minetest.get_modpath("eggwars").."/schems/island.mts")
-  return true;
+  minetest.debug(minetest.pos_to_string(schem_l))
+  minetest.place_schematic(schem_l, schempath.."/"..name..".mts")
+  islands = islands2
 end
 
 minetest.register_node("eggwars:egg", {
@@ -147,17 +145,18 @@ minetest.register_on_dieplayer(function(player)
   minetest.chat_send_all(minetest.get_node(player_i[player:get_player_name()]).name)
 
   if minetest.get_node(player_i[player:get_player_name()]).name ~= "eggwars:egg" then
-    minetest.chat_send_all("***"..player:get_player_name().." is " .. minetest.colorize('red','OUT')..'.')
+    minetest.chat_send_all("***"..player:get_player_name().." is " .. minetest.colorize('red','OUT')..' and now a spectator.')
     --minetest.set_player_privs(player:get_player_name(),{fly=true,fast=true,noclip=true}) --Give player fly, fast and noclip. Revokes other privs.
     player:set_nametag_attributes({color = {a = 255, r = 0, g = 0, b = 0}}) --Make nametag invisible
     player:set_properties({visual_size={x=0, y=0}}) --Make player invisible
   else
     minetest.chat_send_all("***"..player:get_player_name().." paid Hades a visit.")
-    player:set_player_privs({interact=true,shout=true})
+    --player:set_player_privs({interact=true,shout=true})
     local respawn_pos = player_i[player:get_player_name()]
     respawn_pos.y = respawn_pos.y + 2
     player:setpos(respawn_pos)
   end
+  return true;
 end)
 
 --[[
