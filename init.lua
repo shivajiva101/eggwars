@@ -7,12 +7,12 @@
 ----------------------------------------------------
 
 minetest.set_mapgen_params({mgname = "singlenode"})
-
-players_waiting = {};
-waiting_area = {x=0,y=150,z=0};
-islands = {{x=50,y=100,z=0},{x=-50,y=100,z=0},{x=0,y=100,z=50},{x=50,y=100,z=50},{x=-50,y=100,z=50},{x=-50,y=100,z=-50},{x=0,y=100,z=-50},{x=50,y=100,z=-50}}
-i = 1;
-player_i = {};
+local i = 1;
+local players_waiting = {};
+local waiting_area = {x=0,y=150,z=0};
+local islands = {{x=50,y=100,z=0},{x=-50,y=100,z=0},{x=0,y=100,z=50},{x=50,y=100,z=50},{x=-50,y=100,z=50},{x=-50,y=100,z=-50},{x=0,y=100,z=-50},{x=50,y=100,z=-50}}
+local islands2 = islands;
+local player_i = {};
 
 --[[
 chestrefill = function ()
@@ -49,6 +49,7 @@ islandspawn = function (n)
     minetest.debug(minetest.pos_to_string(schem_l))
   end
   --minetest.place_schematic(schem_l,minetest.get_modpath("eggwars").."/schems/island.mts")
+  return true;
 end
 
 minetest.register_node("eggwars:egg", {
@@ -142,11 +143,12 @@ minetest.register_abm({
 
 minetest.register_on_dieplayer(function(player)
   local block = minetest.get_node(player_i[player:get_player_name()]).name
+  minetest.chat_send_all(minetest.pos_to_string(player_i[player:get_player_name()]))
   minetest.chat_send_all(minetest.get_node(player_i[player:get_player_name()]).name)
+
   if minetest.get_node(player_i[player:get_player_name()]).name ~= "eggwars:egg" then
     minetest.chat_send_all("***"..player:get_player_name().." is " .. minetest.colorize('red','OUT')..'.')
-    --player:set_player_privs({fly=true,fast=true,noclip=true}) --Give player fly, fast and noclip. Revokes other privs.
-    minetest.set_player_privs(player:get_player_name(),{fly=true,fast=true,noclip=true}) --Give player fly, fast and noclip. Revokes other privs.
+    --minetest.set_player_privs(player:get_player_name(),{fly=true,fast=true,noclip=true}) --Give player fly, fast and noclip. Revokes other privs.
     player:set_nametag_attributes({color = {a = 255, r = 0, g = 0, b = 0}}) --Make nametag invisible
     player:set_properties({visual_size={x=0, y=0}}) --Make player invisible
   else
@@ -171,6 +173,7 @@ minetest.register_abm({
 ]]
 
 minetest.register_on_joinplayer(function(player)
+
   local player_n = player:get_player_name()
   local privs = minetest.get_player_privs(player_n)
   privs.fly = true
@@ -179,9 +182,9 @@ minetest.register_on_joinplayer(function(player)
     minetest.set_node(waiting_area, {name = "default:dirt_with_grass"})
     player:setpos(waiting_area)
   else
-    islandspawn(i)
     player:setpos(islands[i])
     player_i[player_n] = islands[i];
+    islandspawn(i)
     i = i + 1;
   end
 end)
