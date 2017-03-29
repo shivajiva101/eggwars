@@ -187,3 +187,8 @@ minetest.register_on_joinplayer(function(player)
     i = i + 1;
   end
 end)
+
+minetest.debug('James threw an egg at Mary. How did she respond?')
+minetest.debug('"EGGWARS"')
+minetest.debug('------------------------------------------------')
+minetest.debug('Consider eggwars loaded.')
