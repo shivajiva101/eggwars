@@ -11,7 +11,6 @@ local i = 1;
 local players_waiting = {};
 local waiting_area = {x=0,y=150,z=0};
 local islands = {{x=50,y=100,z=0},{x=-50,y=100,z=0},{x=0,y=100,z=50},{x=50,y=100,z=50},{x=-50,y=100,z=50},{x=-50,y=100,z=-50},{x=0,y=100,z=-50},{x=50,y=100,z=-50}}
-local islands2 = islands;
 local player_i = {};
 
 --[[
@@ -47,7 +46,6 @@ islandspawn = function (n)
   local name = "island"
   minetest.debug(minetest.pos_to_string(schem_l))
   minetest.place_schematic(schem_l, schempath.."/"..name..".mts")
-  islands = islands2
 end
 
 minetest.register_node("eggwars:egg", {
