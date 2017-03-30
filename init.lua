@@ -114,6 +114,11 @@ minetest.register_node("eggwars:goldspawn1", {
   groups = {crumbly = 3} --Temporary, should be unbreakable
 })
 
+minetest.register_node("eggwars:stickspawn", {
+  tiles = {"default_wood.png"},
+  groups = {crumbly = 3} --Temporary, should be unbreakable
+})
+
 minetest.register_node("eggwars:diamondspawn", {
   tiles = {"default_diamond_block.png"},
   groups = {crumbly = 3} --Temporary, should be unbreakable
@@ -171,6 +176,16 @@ minetest.register_abm({
 	action = function(pos)
 		pos.y = pos.y + 1
 		minetest.add_item(pos,"default:steel_ingot")
+	end,
+})
+
+minetest.register_abm({
+	nodenames = {"eggwars:stickspawn"},
+	interval = 8,
+	chance = 1,
+	action = function(pos)
+		pos.y = pos.y + 1
+		minetest.add_item(pos,"default:stick")
 	end,
 })
 
