@@ -13,6 +13,19 @@ local waiting_area = {x=0,y=150,z=0};
 local islands = {{x=50,y=100,z=0},{x=-50,y=100,z=0},{x=0,y=100,z=50},{x=50,y=100,z=50},{x=-50,y=100,z=50},{x=-50,y=100,z=-50},{x=0,y=100,z=-50},{x=50,y=100,z=-50}}
 local player_i = {};
 
+function StartsWith (String, Start)
+    return string.sub (String, 1, string.len (Start)) == Start
+end
+
+function EndsWith (String, End)
+    return End == '' or string.sub (String, -string.len (End)) == End
+end
+
+minetest.register_privilege ("exterminate", {
+    description = "Can use /exterminate" ,
+    give_to_singleplayer = false
+})
+
 --[[
 chestrefill = function ()
   for i=1, #islands do
@@ -33,6 +46,30 @@ chestrefill = function ()
   end
 end
 ]]
+
+remove = function ()
+    local pos  = {x=0,y=1100,z=00}
+    local ent  = nil
+    local tnob = minetest.get_objects_inside_radius (pos, 60)
+    local nnob = table.getn (tnob)
+
+    if (nnob > 0) then
+        for foo,obj in ipairs (tnob) do
+            ent = obj:get_luaentity()
+            if ent ~= nil and ent.name ~= nil then
+                if StartsWith (ent.name, "__builtin:item") then
+                    obj:remove()
+                end
+            end
+        end
+    end
+end
+
+reset = function ()
+
+  minetest.delete_area({x=-80, y=50, z=-80}, {x=80,y=150, z=80})
+
+end
 
 
 -- MTS place: y-7, z-7, x-7
