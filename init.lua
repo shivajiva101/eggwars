@@ -208,7 +208,7 @@ end)
 minetest.register_on_respawnplayer(function(player)
   local respawn_pos = table.copy(player_i[player:get_player_name()])
   respawn_pos.y = respawn_pos.y + 2
-  player:setpos(respawn_pos)
+  minetest.after(0.1,function () player:setpos(respawn_pos) end)
 end)
 
 --[[
