@@ -203,7 +203,6 @@ minetest.register_on_dieplayer(function(player)
     minetest.chat_send_all("*** "..player:get_player_name().." paid Hades a visit.")
     --player:set_player_privs({interact=true,shout=true})
   end
-  return true;
 end)
 
 minetest.register_on_respawnplayer(function(player)
