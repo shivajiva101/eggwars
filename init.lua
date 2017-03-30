@@ -195,18 +195,21 @@ minetest.register_on_dieplayer(function(player)
   minetest.chat_send_all(minetest.get_node(player_i[player:get_player_name()]).name)
 
   if minetest.get_node(player_i[player:get_player_name()]).name ~= "eggwars:egg" then
-    minetest.chat_send_all("***"..player:get_player_name().." is " .. minetest.colorize('red','OUT')..' and now a spectator.')
+    minetest.chat_send_all("*** "..player:get_player_name().." is " .. minetest.colorize('red','OUT')..' and now a spectator.')
     --minetest.set_player_privs(player:get_player_name(),{fly=true,fast=true,noclip=true}) --Give player fly, fast and noclip. Revokes other privs.
     player:set_nametag_attributes({color = {a = 255, r = 0, g = 0, b = 0}}) --Make nametag invisible
     player:set_properties({visual_size={x=0, y=0}}) --Make player invisible
   else
-    minetest.chat_send_all("***"..player:get_player_name().." paid Hades a visit.")
+    minetest.chat_send_all("*** "..player:get_player_name().." paid Hades a visit.")
     --player:set_player_privs({interact=true,shout=true})
-    local respawn_pos = player_i[player:get_player_name()]
-    respawn_pos.y = respawn_pos.y + 2
-    player:setpos(respawn_pos)
   end
   return true;
+end)
+
+minetest.register_on_respawnplayer(function(player)
+  local respawn_pos = table.copy(player_i[player:get_player_name()])
+  respawn_pos.y = respawn_pos.y + 2
+  player:setpos(respawn_pos)
 end)
 
 --[[
