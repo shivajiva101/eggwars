@@ -47,7 +47,7 @@ chestrefill = function ()
 end
 ]]
 
-remove = function ()
+removeDrops = function ()
     local pos  = {x=0,y=1100,z=00}
     local ent  = nil
     local tnob = minetest.get_objects_inside_radius (pos, 60)
@@ -66,7 +66,7 @@ remove = function ()
 end
 
 reset = function ()
-
+  removeDrops();
   minetest.delete_area({x=-80, y=50, z=-80}, {x=80,y=150, z=80})
 
 end
