@@ -12,6 +12,7 @@ local players_waiting = {};
 local waiting_area = {x=0,y=150,z=0};
 local islands = {{x=50,y=100,z=0},{x=-50,y=100,z=0},{x=0,y=100,z=50},{x=50,y=100,z=50},{x=-50,y=100,z=50},{x=-50,y=100,z=-50},{x=0,y=100,z=-50},{x=50,y=100,z=-50}}
 local player_i = {};
+local players_alive = {};
 
 function StartsWith (String, Start)
     return string.sub (String, 1, string.len (Start)) == Start
@@ -197,6 +198,14 @@ minetest.register_on_dieplayer(function(player)
   if minetest.get_node(player_i[player:get_player_name()]).name ~= "eggwars:egg" then
     minetest.chat_send_all("*** "..player:get_player_name().." is " .. minetest.colorize('red','OUT')..' and now a spectator.')
     --minetest.set_player_privs(player:get_player_name(),{fly=true,fast=true,noclip=true}) --Give player fly, fast and noclip. Revokes other privs.
+    for j=1,#players_alive do
+      if players_alive[j] == player:get_player_name() then
+        table.remove(players_alive[j])
+      end
+    end
+    if #players_alive == 1 then
+      minetest.chat_send_all(minetest.colorize("green", "*** " .. players_alive[1] .. " has won!"))
+    end
     player:set_nametag_attributes({color = {a = 255, r = 0, g = 0, b = 0}}) --Make nametag invisible
     player:set_properties({visual_size={x=0, y=0}}) --Make player invisible
   else
@@ -232,6 +241,7 @@ minetest.register_on_joinplayer(function(player)
   if i >= 8 then
     minetest.set_node(waiting_area, {name = "default:dirt_with_grass"})
     player:setpos(waiting_area)
+    players_alive[i] = player_n;
   else
     player:setpos(islands[i])
     player_i[player_n] = islands[i];
