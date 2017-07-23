@@ -13,7 +13,7 @@ local i = 1;
 local players_waiting = {};
 local waiting_area = {x=0,y=150,z=0};
 local islands = {{x=50,y=100,z=0},{x=-50,y=100,z=0},{x=0,y=100,z=50},{x=50,y=100,z=50},{x=-50,y=100,z=50},{x=-50,y=100,z=-50},{x=0,y=100,z=-50},{x=50,y=100,z=-50}}
-local centre = {x=0,y=0,z=0}
+local centre = {x=0,y=100,z=0}
 local player_i = {};
 local players_alive = {};
 
@@ -52,23 +52,23 @@ chestrefill = function ()
 end
 ]]
 
-
+-- Thanks to OldCoder for the following function
 removeDrops = function ()
-    local pos  = {x=0,y=1100,z=00}
-    local ent  = nil
-    local tnob = minetest.get_objects_inside_radius (pos, 60)
-    local nnob = table.getn (tnob)
+  local pos  = {x=0,y=100,z=0}
+  local ent  = nil
+  local tnob = minetest.get_objects_inside_radius (pos, 60)
+  local nnob = table.getn(tnob)
 
-    if (nnob > 0) then
-        for foo,obj in ipairs (tnob) do
-            ent = obj:get_luaentity()
-            if ent ~= nil and ent.name ~= nil then
-                if StartsWith (ent.name, "__builtin:item") then
-                    obj:remove()
-                end
-            end
+  if (nnob > 0) then
+    for foo,obj in ipairs (tnob) do
+      ent = obj:get_luaentity()
+      if ent ~= nil and ent.name ~= nil then
+        if StartsWith (ent.name, "__builtin:item") then
+          obj:remove()
         end
+      end
     end
+  end
 end
 
 reset = function ()
@@ -86,6 +86,7 @@ spawncentre = function ()
   centre_transformed.z = centre_transformed.z - 10
   local schempath = minetest.get_modpath("eggwars").."/schems";
   local name = "centre"
+    minetest.debug("spawncentre: " .. minetest.pos_to_string(centre_transformed))
   minetest.place_schematic(centre_transformed, schempath.."/"..name..".mts")
 end
 
@@ -98,7 +99,7 @@ islandspawn = function (n)
   schem_l.z = schem_l.z -7
   local schempath = minetest.get_modpath("eggwars").."/schems";
   local name = "island"
-  minetest.debug(minetest.pos_to_string(schem_l))
+  minetest.debug("spawn island: " .. minetest.pos_to_string(schem_l))
   minetest.place_schematic(schem_l, schempath.."/"..name..".mts")
 end
 
