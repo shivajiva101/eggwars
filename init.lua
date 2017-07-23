@@ -6,6 +6,8 @@
 -- Supports a maximum of 8 players currently
 ----------------------------------------------------
 
+dofile(minetest.get_modpath("eggwars").."/egg2.lua")
+
 minetest.set_mapgen_params({mgname = "singlenode"})
 local i = 1;
 local players_waiting = {};
@@ -22,10 +24,11 @@ function EndsWith (String, End)
     return End == '' or string.sub (String, -string.len (End)) == End
 end
 
-minetest.register_privilege ("exterminate", {
+--[[minetest.register_privilege ("exterminate", {
     description = "Can use /exterminate" ,
     give_to_singleplayer = false
 })
+]]
 
 --[[
 chestrefill = function ()
@@ -48,6 +51,7 @@ chestrefill = function ()
 end
 ]]
 
+
 removeDrops = function ()
     local pos  = {x=0,y=1100,z=00}
     local ent  = nil
@@ -69,7 +73,7 @@ end
 reset = function ()
   removeDrops();
   minetest.delete_area({x=-80, y=50, z=-80}, {x=80,y=150, z=80})
-
+  players_alive = {};
 end
 
 
