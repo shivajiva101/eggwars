@@ -255,7 +255,7 @@ minetest.register_on_joinplayer(function(player)
   local privs = minetest.get_player_privs(player_n)
   privs.fly = true
   minetest.set_player_privs(player_n, privs)
-  if i = 1 then
+  if i == 1 then
     spawncentre();
   end
   if i >= 8 then
