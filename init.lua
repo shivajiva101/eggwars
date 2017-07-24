@@ -5,17 +5,29 @@
 -- even if you just run it on your server without publishing it
 -- Supports a maximum of 8 players currently
 ----------------------------------------------------
+eggwars = {}
+eggwars.MP = minetest.get_modpath("eggwars")
 
-dofile(minetest.get_modpath("eggwars").."/egg2.lua")
+dofile(eggwars.MP.."/register_nodes.lua")
+dofile(eggwars.MP.."/egg2.lua")
 
 minetest.set_mapgen_params({mgname = "singlenode"})
 local i = 1;
 local players_waiting = {};
 local waiting_area = {x=0,y=150,z=0};
-local islands = {{x=50,y=100,z=0},{x=-50,y=100,z=0},{x=0,y=100,z=50},{x=50,y=100,z=50},{x=-50,y=100,z=50},{x=-50,y=100,z=-50},{x=0,y=100,z=-50},{x=50,y=100,z=-50}}
 local centre = {x=0,y=100,z=0}
 local player_i = {};
 local players_alive = {};
+local islands = {
+    {x=50,y=100,z=0},
+    {x=-50,y=100,z=0},
+    {x=0,y=100,z=50},
+    {x=50,y=100,z=50},
+    {x=-50,y=100,z=50},
+    {x=-50,y=100,z=-50},
+    {x=0,y=100,z=-50},
+    {x=50,y=100,z=-50}
+}
 
 function StartsWith (String, Start)
     return string.sub (String, 1, string.len (Start)) == Start
@@ -103,110 +115,7 @@ islandspawn = function (n)
   minetest.place_schematic(schem_l, schempath.."/"..name..".mts")
 end
 
-minetest.register_node("eggwars:egg", {
-	tiles = {
-		"default_stone.png",
-		"default_stone.png",
-		"default_stone.png",
-		"default_stone.png",
-		"default_stone.png",
-		"default_stone.png"
-	},
-  groups = {crumbly = 3},
-	drawtype = "nodebox",
-	paramtype = "light",
-	node_box = {
-		type = "fixed",
-		fixed = {
-			{-0.1875, -0.5, -0.1875, 0.1875, 0.5, 0.1875}, -- NodeBox1
-			{-0.25, -0.4375, -0.25, 0.25, 0.4375, 0.25}, -- NodeBox2
-			{-0.3125, -0.375, -0.3125, 0.3125, 0.3125, 0.3125}, -- NodeBox3
-			{-0.375, -0.3125, -0.375, 0.375, 0.1875, 0.375}, -- NodeBox4
-			{-0.4375, -0.25, -0.4375, 0.4375, 0.0625, 0.4375}, -- NodeBox5
-			{-0.5, -0.125, -0.5, 0.5, -0.0625, 0.5}, -- NodeBox6
-		}
-	}
-})
 
-minetest.register_node("eggwars:goldspawn1", {
-  tiles = {"default_gold_block.png"},
-  groups = {crumbly = 3} --Temporary, should be unbreakable
-})
-
-minetest.register_node("eggwars:stickspawn", {
-  tiles = {"default_wood.png"},
-  groups = {crumbly = 3} --Temporary, should be unbreakable
-})
-
-minetest.register_node("eggwars:diamondspawn", {
-  tiles = {"default_diamond_block.png"},
-  groups = {crumbly = 3} --Temporary, should be unbreakable
-})
-
-minetest.register_node("eggwars:steelspawn1", { --Slower spawn rate; for player islands
-  tiles = {"default_steel_block.png"},
-  groups = {crumbly = 3} --Temporary, should be unbreakable
-})
-
-minetest.register_node("eggwars:steelspawn2", { --Faster spawn rate; for center island(s)
-  tiles = {"default_diamond_block.png"},
-  groups = {crumbly = 3} --Temporary, should be unbreakable
-})
-
-minetest.register_node("eggwars:cobblespawn", {
-  tiles = {"default_cobble.png"},
-  groups = {crumbly = 3} --Temporary, should be unbreakable
-})
-
-minetest.register_abm({
-	nodenames = {"eggwars:diamondspawn"},
-	interval = 8,
-	chance = 1,
-	action = function(pos)
-		pos.y = pos.y + 1
-		minetest.add_item(pos,"default:diamond")
-	end,
-})
-
-minetest.register_abm({
-	nodenames = {"eggwars:cobblespawn"},
-	interval = 5,
-	chance = 1,
-	action = function(pos)
-		pos.y = pos.y + 1
-		minetest.add_item(pos,"default:cobble")
-	end,
-})
-
-minetest.register_abm({
-	nodenames = {"eggwars:steelspawn1"},
-	interval = 10,
-	chance = 1,
-	action = function(pos)
-		pos.y = pos.y + 1
-		minetest.add_item(pos,"default:steel_ingot")
-	end,
-})
-
-minetest.register_abm({
-	nodenames = {"eggwars:steelspawn2"},
-	interval = 5,
-	chance = 1,
-	action = function(pos)
-		pos.y = pos.y + 1
-		minetest.add_item(pos,"default:steel_ingot")
-	end,
-})
-
-minetest.register_abm({
-	nodenames = {"eggwars:stickspawn"},
-	interval = 8,
-	chance = 1,
-	action = function(pos)
-		pos.y = pos.y + 1
-		minetest.add_item(pos,"default:stick")
-	end,
-})
 
 minetest.register_on_dieplayer(function(player)
   local block = minetest.get_node(player_i[player:get_player_name()]).name
@@ -238,18 +147,6 @@ minetest.register_on_respawnplayer(function(player)
   respawn_pos.y = respawn_pos.y + 2
   minetest.after(0.1,function () player:setpos(respawn_pos) end)
 end)
-
---[[
-minetest.register_abm({
-	nodenames = {"eggwars:goldspawn1"},
-	interval = 10,
-	chance = 1,
-	action = function(pos)
-		pos.y = pos.y + 1
-		minetest.add_item(pos,"default:gold_ingot")
-	end,
-})
-]]
 
 minetest.register_on_joinplayer(function(player)
   local player_n = player:get_player_name()
