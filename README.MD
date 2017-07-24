@@ -16,4 +16,6 @@ Drop this mod into /mods/.
 * Do not use a different mapgen mod. This will also cause issues
 
 ### Using custom structures
-The structures are stored in the schems/ folder. The centre and island files are the centre island and player islands respectively. 
+The structures are stored in the schems/ folder. The centre and island files are the centre island and player islands respectively. If you modify these, please update the offsets for the islands:
+* Centre island: lines 96-98
+* Player island: lines 109-111
