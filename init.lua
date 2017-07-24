@@ -20,7 +20,6 @@ eggwars = {}
 eggwars.MP = minetest.get_modpath("eggwars")
 
 dofile(eggwars.MP.."/register_nodes.lua")
-dofile(eggwars.MP.."/egg2.lua")
 
 minetest.set_mapgen_params({mgname = "singlenode"})
 local i = 1;
