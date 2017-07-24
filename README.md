@@ -10,7 +10,7 @@ Each player's goal is to defend their egg and be the last person standing. If a 
 When there is one player left standing, they are declared the winner.
 
 ### Install
-Drop this mod into /mods/.
+Extract the zip file to mods/ **or** use `git clone https://github.com/wilkgr76/eggwars` from within the mods directory.
 
 * Do **NOT** use an existing world - this will overwrite the mapgen and cause destruction.
 * Do not use a different mapgen mod. This will also cause issues
