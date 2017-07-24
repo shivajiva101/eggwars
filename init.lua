@@ -64,7 +64,6 @@ chestrefill = function ()
 end
 ]]
 
--- Thanks to OldCoder for the following function
 removeDrops = function ()
   local pos  = {x=0,y=100,z=0}
   local ent  = nil
@@ -102,7 +101,6 @@ spawncentre = function ()
   minetest.place_schematic(centre_transformed, schempath.."/"..name..".mts")
 end
 
--- MTS place: y-7, z-7, x-7
 islandspawn = function (n)
   --minetest.set_node(islands[n],{name = "eggwars:egg"})
   local schem_l = table.copy(islands[n]);
@@ -155,6 +153,7 @@ minetest.register_on_joinplayer(function(player)
   minetest.set_player_privs(player_n, privs)
   if i == 1 then
     spawncentre();
+    minetest.chat_send_all("Unfortunately, more than one player is required to play. Please wait for another player to join.")
   end
   if i >= 8 then
     minetest.set_node(waiting_area, {name = "default:dirt_with_grass"})
@@ -169,7 +168,4 @@ minetest.register_on_joinplayer(function(player)
   end
 end)
 
-minetest.debug('James threw an egg at Mary. How did she respond?')
-minetest.debug('"EGGWARS"')
-minetest.debug('------------------------------------------------')
-minetest.debug('Consider eggwars loaded.')
+minetest.debug('[LOADED] Eggwars')
