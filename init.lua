@@ -5,6 +5,17 @@
 -- even if you just run it on your server without publishing it
 -- Supports a maximum of 8 players currently
 ----------------------------------------------------
+
+--[[
+Shop formspec:
+
+button[0,0;10,1;upgradespeed;Upgrade speed]
+button[0,2;10,1;upgradejump;Upgrade jump]
+button[0,4;10,1;zoom;Binoculars]
+button[0,6;10,1;thug;Order execution (cost: 99 diamonds)]
+
+
+]]
 eggwars = {}
 eggwars.MP = minetest.get_modpath("eggwars")
 
@@ -19,15 +30,22 @@ local centre = {x=0,y=100,z=0}
 local player_i = {};
 local players_alive = {};
 local islands = {
-    {x=50,y=100,z=0},
-    {x=-50,y=100,z=0},
-    {x=0,y=100,z=50},
-    {x=50,y=100,z=50},
-    {x=-50,y=100,z=50},
-    {x=-50,y=100,z=-50},
-    {x=0,y=100,z=-50},
-    {x=50,y=100,z=-50}
+  {x=50,y=100,z=0},
+  {x=-50,y=100,z=0},
+  {x=0,y=100,z=50},
+  {x=50,y=100,z=50},
+  {x=-50,y=100,z=50},
+  {x=-50,y=100,z=-50},
+  {x=0,y=100,z=-50},
+  {x=50,y=100,z=-50}
 }
+
+local upgrade_form = [[
+button[0,0;10,1;upgradespeed;Upgrade speed]
+button[0,2;10,1;upgradejump;Upgrade jump]
+button[0,4;10,1;zoom;Binoculars]
+button[0,6;10,1;thug;Order execution (cost: 99 diamonds)]
+]]
 
 function StartsWith (String, Start)
     return string.sub (String, 1, string.len (Start)) == Start
