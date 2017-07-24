@@ -128,6 +128,7 @@ minetest.register_node("eggwars:cobblespawn", {
 
 -- Register ABMs
 
+-- Diamond spawn. Only for centre island(s)
 minetest.register_abm({
 	nodenames = {"eggwars:diamondspawn"},
 	interval = 8,
@@ -138,6 +139,7 @@ minetest.register_abm({
 	end,
 })
 
+-- Cobble is the building material
 minetest.register_abm({
 	nodenames = {"eggwars:cobblespawn"},
 	interval = 5,
@@ -148,6 +150,7 @@ minetest.register_abm({
 	end,
 })
 
+-- Steelspawn1 is slower, ideal for player islands
 minetest.register_abm({
 	nodenames = {"eggwars:steelspawn1"},
 	interval = 10,
@@ -158,6 +161,7 @@ minetest.register_abm({
 	end,
 })
 
+-- Steelspawn2 is faster, ideal for centre island
 minetest.register_abm({
 	nodenames = {"eggwars:steelspawn2"},
 	interval = 5,
@@ -168,6 +172,7 @@ minetest.register_abm({
 	end,
 })
 
+-- Stick spawner, for allowing players to craft tools
 minetest.register_abm({
 	nodenames = {"eggwars:stickspawn"},
 	interval = 8,
@@ -178,6 +183,7 @@ minetest.register_abm({
 	end,
 })
 
+-- Goldspawn1 is slower, ideal for player islands
 minetest.register_abm({
 	nodenames = {"eggwars:goldspawn1"},
 	interval = 10,
