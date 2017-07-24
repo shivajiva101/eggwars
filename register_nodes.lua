@@ -103,36 +103,30 @@ minetest.register_node("eggwars:ladder_wood", {
 })
 
 minetest.register_node("eggwars:goldspawn1", {
-  tiles = {"default_gold_block.png"},
-  groups = {crumbly = 3} --Temporary, should be unbreakable
+  tiles = {"default_gold_block.png"}
 })
 
 minetest.register_node("eggwars:stickspawn", {
-  tiles = {"default_aspen_wood.png"},
-  groups = {crumbly = 3} --Temporary, should be unbreakable
+  tiles = {"default_aspen_wood.png"}
 })
 
 minetest.register_node("eggwars:diamondspawn", {
-  tiles = {"default_diamond_block.png"},
-  groups = {crumbly = 3} --Temporary, should be unbreakable
+  tiles = {"default_diamond_block.png"}
 })
 
 minetest.register_node("eggwars:steelspawn1", { --Slower spawn rate; for player islands
-  tiles = {"default_steel_block.png"},
-  groups = {crumbly = 3} --Temporary, should be unbreakable
+  tiles = {"default_steel_block.png"}
 })
 
 minetest.register_node("eggwars:steelspawn2", { --Faster spawn rate; for center island(s)
-  tiles = {"default_diamond_block.png"},
-  groups = {crumbly = 3} --Temporary, should be unbreakable
+  tiles = {"default_diamond_block.png"}
 })
 
 minetest.register_node("eggwars:cobblespawn", {
-  tiles = {"default_cobble.png"},
-  groups = {crumbly = 3} --Temporary, should be unbreakable
+  tiles = {"default_cobble.png"}
 })
 
--- Register ABM's
+-- Register ABMs
 
 minetest.register_abm({
 	nodenames = {"eggwars:diamondspawn"},
