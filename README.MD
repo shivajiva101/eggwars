@@ -12,7 +12,7 @@ When there is one player left standing, they are declared the winner.
 ### Install
 Drop this mod into /mods/.
 
-* Do *NOT* use an existing world - this will overwrite the mapgen and cause destruction.
+* Do **NOT** use an existing world - this will overwrite the mapgen and cause destruction.
 * Do not use a different mapgen mod. This will also cause issues
 
 ### Using custom structures
