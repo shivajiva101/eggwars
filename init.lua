@@ -79,18 +79,23 @@ reset = function ()
   removeDrops();
   minetest.delete_area({x=-80, y=50, z=-80}, {x=80,y=150, z=80})
   players_alive = {};
-
+  centrespawn();
+  for m=1,#players_alive do
+    if(m < #islands) then
+      islandspawn(m)
+    end
+  end
 end
 
 -- Set spawnpoint to y-1, x-10, z-10
-spawncentre = function ()
+centrespawn = function ()
   local centre_transformed = table.copy(centre)
   centre_transformed.y = centre_transformed.y - 1
   centre_transformed.x = centre_transformed.x - 10
   centre_transformed.z = centre_transformed.z - 10
   local schempath = minetest.get_modpath("eggwars").."/schems";
   local name = "centre"
-    minetest.debug("spawncentre: " .. minetest.pos_to_string(centre_transformed))
+    minetest.debug("centrespawn: " .. minetest.pos_to_string(centre_transformed))
   minetest.place_schematic(centre_transformed, schempath.."/"..name..".mts")
 end
 
@@ -101,8 +106,8 @@ islandspawn = function (n)
   schem_l.x = schem_l.x -7
   schem_l.z = schem_l.z -7
   local schempath = minetest.get_modpath("eggwars").."/schems";
-  local name = "eggwars.island"
-  minetest.debug("spawn eggwars.island: " .. minetest.pos_to_string(schem_l))
+  local name = "island"
+  minetest.debug("spawn island: " .. minetest.pos_to_string(schem_l))
   minetest.place_schematic(schem_l, schempath.."/"..name..".mts")
 end
 
@@ -146,7 +151,7 @@ minetest.register_on_joinplayer(function(player)
   minetest.set_player_privs(player_n, privs)
   player:set_nametag_attributes({color = allowed_colours[i]})
   if i == 1 then
-    spawncentre();
+    centrespawn();
     minetest.chat_send_all("Unfortunately, more than one player is required to play. Please wait for another player to join.")
   end
   if i >= 8 then
@@ -177,7 +182,5 @@ minetest.register_chatcommand("shop", {
 		return true
 	end,
 })
-
-
 
 minetest.debug('[LOADED] Eggwars')
