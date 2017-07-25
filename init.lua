@@ -95,14 +95,14 @@ spawncentre = function ()
 end
 
 islandspawn = function (n)
-  --minetest.set_node(islands[n],{name = "eggwars:egg"})
-  local schem_l = table.copy(islands[n]);
+  --minetest.set_node(eggwars.islands[n],{name = "eggwars:egg"})
+  local schem_l = table.copy(eggwars.islands[n]);
   schem_l.y = schem_l.y - 6
   schem_l.x = schem_l.x -7
   schem_l.z = schem_l.z -7
   local schempath = minetest.get_modpath("eggwars").."/schems";
-  local name = "island"
-  minetest.debug("spawn island: " .. minetest.pos_to_string(schem_l))
+  local name = "eggwars.island"
+  minetest.debug("spawn eggwars.island: " .. minetest.pos_to_string(schem_l))
   minetest.place_schematic(schem_l, schempath.."/"..name..".mts")
 end
 
@@ -114,7 +114,7 @@ minetest.register_on_dieplayer(function(player)
   minetest.chat_send_all(minetest.get_node(player_i[player:get_player_name()]).name)
 
   if minetest.get_node(player_i[player:get_player_name()]).name ~= "eggwars:egg" then
-      minetest.chat_send_all("*** "..player:get_player_name().." is " .. y
+      minetest.chat_send_all("*** "..player:get_player_name().." is " .. minetest.colorize('red','OUT'))
     --minetest.set_player_privs(player:get_player_name(),{fly=true,fast=true,noclip=true}) --Give player fly, fast and noclip. Revokes other privs.
     player:set_nametag_attributes({color = {a = 255, r = 0, g = 0, b = 0}}) --Make nametag invisible
     player:set_properties({visual_size={x=0, y=0}}) --Make player invisible
@@ -155,8 +155,8 @@ minetest.register_on_joinplayer(function(player)
     players_alive[i] = player_n;
     i = i + 1;
   else
-    player:setpos(islands[i])
-    player_i[player_n] = islands[i];
+    player:setpos(eggwars.islands[i])
+    player_i[player_n] = eggwars.islands[i];
     islandspawn(i)
     i = i + 1;
   end
