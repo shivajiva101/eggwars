@@ -189,9 +189,10 @@ minetest.register_chatcommand("shop", {
 	description = "Open shop",
 	func = function(name, param)
     minetest.show_formspec(name, "eggwars:shop", shop_fs)
-		return true, "Done."
+		return true
 	end,
 })
+
 
 
 minetest.debug('[LOADED] Eggwars')
