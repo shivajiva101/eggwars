@@ -27,7 +27,9 @@ local waiting_area = {x=0,y=150,z=0};
 local centre = {x=0,y=100,z=0}
 local player_i = {};
 local players_alive = {};
-local islands = {
+local allowed_colours = {""}
+local player_colours = {};
+eggwars.islands = {
   {x=50,y=100,z=0},
   {x=-50,y=100,z=0},
   {x=0,y=100,z=50},
@@ -45,33 +47,6 @@ end
 function EndsWith (String, End)
     return End == '' or string.sub (String, -string.len (End)) == End
 end
-
---[[minetest.register_privilege ("exterminate", {
-    description = "Can use /exterminate" ,
-    give_to_singleplayer = false
-})
-]]
-
---[[
-chestrefill = function ()
-  for i=1, #islands do
-    local items = {"default:diamond","default:wood","default:wood","default:stick","default:wood","default:wood","default:mesecrystal","default:sword_diamond","default:sword_stone","default:sword_stone","default:sword_stone","default:sword_stone"}
-    minetest.set_node(islands[i],{name = "default:chest"})
-    math.randomseed(os.clock()*100000000000)
-    math.random()
-    local item_no = math.random(1, 4)
-    local n = 0
-    while n < item_no do
-      math.randomseed(os.clock()*100000000000)
-      math.random()
-      local item = math.random(1, #items)
-      local inv = minetest.get_inventory({type="node", pos=islands[i]})
-      inv:add_item("main",items[item])
-      n = n + 1;
-    end
-  end
-end
-]]
 
 removeDrops = function ()
   local pos  = {x=0,y=100,z=0}
