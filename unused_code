@@ -17,3 +17,9 @@ chestrefill = function ()
     end
   end
 end
+
+-- Set nametag colour:
+player:set_nametag_attributes({color = {a = 255, r = 0, g = 0, b = 0}}) --Make nametag invisible
+
+-- colourise chat text:
+minetest.colorize('colour','text')

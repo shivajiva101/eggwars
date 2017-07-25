@@ -27,7 +27,16 @@ local waiting_area = {x=0,y=150,z=0};
 local centre = {x=0,y=100,z=0}
 local player_i = {};
 local players_alive = {};
-local allowed_colours = {""}
+local allowed_colours = {
+  {r = 0, g = 0, b = 255},
+  {r = 0, g = 255, b = 0},
+  {r = 255, g = 0, b = 0},
+  {r = 200, g = 0, b = 200},
+  {r = 255, g = 255, b = 0},
+  {r = 0, g = 255, b = 255},
+  {r = 255, g = 165, b = 0},
+  {r = 0, g = 0, b = 0}
+}
 local player_colours = {};
 eggwars.islands = {
   {x=50,y=100,z=0},
@@ -105,7 +114,7 @@ minetest.register_on_dieplayer(function(player)
   minetest.chat_send_all(minetest.get_node(player_i[player:get_player_name()]).name)
 
   if minetest.get_node(player_i[player:get_player_name()]).name ~= "eggwars:egg" then
-    minetest.chat_send_all("*** "..player:get_player_name().." is " .. minetest.colorize('red','OUT')..' and now a spectator.')
+      minetest.chat_send_all("*** "..player:get_player_name().." is " .. y
     --minetest.set_player_privs(player:get_player_name(),{fly=true,fast=true,noclip=true}) --Give player fly, fast and noclip. Revokes other privs.
     player:set_nametag_attributes({color = {a = 255, r = 0, g = 0, b = 0}}) --Make nametag invisible
     player:set_properties({visual_size={x=0, y=0}}) --Make player invisible
@@ -135,6 +144,7 @@ minetest.register_on_joinplayer(function(player)
   local privs = minetest.get_player_privs(player_n)
   privs.fly = true
   minetest.set_player_privs(player_n, privs)
+  player:set_nametag_attributes({color = allowed_colours[i]})
   if i == 1 then
     spawncentre();
     minetest.chat_send_all("Unfortunately, more than one player is required to play. Please wait for another player to join.")
