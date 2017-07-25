@@ -11,7 +11,6 @@ Shop formspec:
 
 button[0,0;10,1;upgradespeed;Upgrade speed]
 button[0,2;10,1;upgradejump;Upgrade jump]
-button[0,4;10,1;zoom;Binoculars]
 button[0,6;10,1;thug;Order execution (cost: 99 diamonds)]
 
 
@@ -38,13 +37,6 @@ local islands = {
   {x=0,y=100,z=-50},
   {x=50,y=100,z=-50}
 }
-
-local upgrade_form = [[
-button[0,0;10,1;upgradespeed;Upgrade speed]
-button[0,2;10,1;upgradejump;Upgrade jump]
-button[0,4;10,1;zoom;Binoculars]
-button[0,6;10,1;thug;Order execution (cost: 99 diamonds)]
-]]
 
 function StartsWith (String, Start)
     return string.sub (String, 1, string.len (Start)) == Start
@@ -184,5 +176,22 @@ minetest.register_on_joinplayer(function(player)
     i = i + 1;
   end
 end)
+
+local shop_fs = [[
+size[10,3]
+button[0,0;10,1;upgradespeed;Upgrade speed (cost: 20 diamonds)]
+button[0,1;10,1;upgradejump;Upgrade jump (cost: 20 diamonds)]
+button[0,2;10,1;thug;Order execution (cost: 99 diamonds)]
+]]
+
+minetest.register_chatcommand("shop", {
+	params = "",
+	description = "Open shop",
+	func = function(name, param)
+    minetest.show_formspec(name, "eggwars:shop", shop_fs)
+		return true, "Done."
+	end,
+})
+
 
 minetest.debug('[LOADED] Eggwars')
