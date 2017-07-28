@@ -157,7 +157,16 @@ minetest.register_chatcommand("register", {
 	func = function(name, param)
 		if #eggwars.registered_players < 8 then
 	    if match_running == false then
-	      eggwars.registered_players[#eggwars.registered_players+1] = name;
+        local contd = true;
+        for p=1,#eggwars.registered_players do
+          if eggwars.registered_players[p] = name then
+            contd = false;
+            minetest.chat_send_player(name,"You have already registered")
+          end
+        end
+        if contd then
+          eggwars.registered_players[#eggwars.registered_players+1] = name;
+        end
 	      if #eggwars.registered_players == 8 then
 	        begin_match();
 	      else
