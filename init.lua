@@ -156,7 +156,7 @@ minetest.register_chatcommand("register", {
 	description = "Join match",
 	func = function(name, param)
 		if #eggwars.registered_players < 8 then
-	    if !match_running then
+	    if match_running == false then
 	      eggwars.registered_players[#eggwars.registered_players+1] = name;
 	      if #eggwars.registered_players == 8 then
 	        begin_match();
@@ -168,17 +168,20 @@ minetest.register_chatcommand("register", {
 			end
 		else
 			minetest.chat_send_player(name,"Sorry. 8 players have already registered. Try registering after their game has begun.")
-		return true
+		end
 	end,
 })
 
 begin_match = function ()
   for k=1,#eggwars.registered_players do
-    local player = minetest.get_player_by_name(name);
-    local player_n = name;
+    local player = minetest.get_player_by_name(eggwars.registered_players[k]);
+    local player_n = eggwars.registered_players[k];
     minetest.set_player_privs(player_n, {interact=true,shout=true});
     player:set_nametag_attributes({color = allowed_colours[k]})
     islandspawn(k);
+    player:setpos(eggwars.islands[k])
+    player_i[player_n] = eggwars.islands[k];
+    players_alive[i] = player_n;
   end
 	centrespawn();
 	match_running = true;
@@ -186,17 +189,8 @@ begin_match = function ()
 end
 
 minetest.register_on_joinplayer(function(player)
-  if i >= 8 then
-    minetest.set_node(waiting_area, {name = "default:dirt_with_grass"})
-    player:setpos(waiting_area)
-    players_alive[i] = player_n;
-    i = i + 1;
-  else
-    player:setpos(eggwars.islands[i])
-    player_i[player_n] = eggwars.islands[i];
-    islandspawn(i)
-    i = i + 1;
-  end
+  minetest.set_node(eggwars.waiting_area, {name = "default:dirt_with_grass"})
+  player:setpos(eggwars.waiting_area)
 end)
 
 local shop_fs = [[
