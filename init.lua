@@ -14,7 +14,7 @@ dofile(eggwars.MP.."/register_nodes.lua")
 -------------------------
 -- SECION: Coordinates --
 -------------------------
-local waiting_area = {x=0,y=150,z=0};
+eggwars.waiting_area = {x=0,y=1000,z=0};
 local centre = {x=0,y=100,z=0}
 eggwars.islands = {
     {x=50,y=100,z=0},
@@ -31,8 +31,9 @@ eggwars.islands = {
 -- Please don't modify these --
 -------------------------------
 local i = 1;
+eggwars.registered_players = {};
 local players_waiting = {};
-local player_i = {};
+local player_i = {}; -- A table with the player names and their island.
 local players_alive = {};
 local player_colours = {};
 local match_running = false;
@@ -114,6 +115,7 @@ islandspawn = function (n)
   local name = "island"
   minetest.debug("spawn island: " .. minetest.pos_to_string(schem_l))
   minetest.place_schematic(schem_l, schempath.."/"..name..".mts")
+  return eggwars.islands[n] -- Return spawn point
 end
 
 
@@ -149,16 +151,41 @@ minetest.register_on_respawnplayer(function(player)
   minetest.after(0.1,function () player:setpos(respawn_pos) end) -- Wait until they have actually respawned before moving
 end)
 
-minetest.register_on_joinplayer(function(player)
-  local player_n = player:get_player_name()
-  local privs = minetest.get_player_privs(player_n)
-  privs.fly = true
-  minetest.set_player_privs(player_n, privs)
-  player:set_nametag_attributes({color = allowed_colours[i]})
-  if i == 1 then
-    centrespawn(); -- I need to move this
-    minetest.chat_send_all("Unfortunately, more than one player is required to play. Please wait for another player to join.")
+minetest.register_chatcommand("register", {
+	params = "",
+	description = "Join match",
+	func = function(name, param)
+		if #eggwars.registered_players < 8 then
+	    if !match_running then
+	      eggwars.registered_players[#eggwars.registered_players+1] = name;
+	      if #eggwars.registered_players == 8 then
+	        begin_match();
+	      else
+					minetest.chat_send_all(#eggwars.registered_players .. "/8 players have registered! Use /register to join.");
+				end
+	    else
+				minetest.chat_send_player(name,"Sorry. A match is already running. Please use /start once their match has finished.");
+			end
+		else
+			minetest.chat_send_player(name,"Sorry. 8 players have already registered. Try registering after their game has begun.")
+		return true
+	end,
+})
+
+begin_match = function ()
+  for k=1,#eggwars.registered_players do
+    local player = minetest.get_player_by_name(name);
+    local player_n = name;
+    minetest.set_player_privs(player_n, {interact=true,shout=true});
+    player:set_nametag_attributes({color = allowed_colours[k]})
+    islandspawn(k);
   end
+	centrespawn();
+	match_running = true;
+  eggwars.registered_players = {}; -- Reset list of registered players
+end
+
+minetest.register_on_joinplayer(function(player)
   if i >= 8 then
     minetest.set_node(waiting_area, {name = "default:dirt_with_grass"})
     player:setpos(waiting_area)
