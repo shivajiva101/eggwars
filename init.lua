@@ -79,7 +79,7 @@ removeDrops = function ()
   end
 end
 
--- WIP reset function restart game
+-- WIP reset function to restart game
 reset = function ()
   removeDrops();
   minetest.delete_area({x=-80, y=50, z=-80}, {x=80,y=150, z=80})
