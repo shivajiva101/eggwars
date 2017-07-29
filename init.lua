@@ -159,7 +159,7 @@ minetest.register_chatcommand("register", {
 	    if match_running == false then
         local contd = true;
         for p=1,#eggwars.registered_players do
-          if eggwars.registered_players[p] = name then
+          if eggwars.registered_players[p] == name then
             contd = false;
             minetest.chat_send_player(name,"You have already registered")
           end
