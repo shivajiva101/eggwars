@@ -53,11 +53,11 @@ local allowed_colours = {
 }
 
 function StartsWith (String, Start)
-    return string.sub (String, 1, string.len (Start)) == Start
+  return string.sub (String, 1, string.len (Start)) == Start
 end
 
 function EndsWith (String, End)
-    return End == '' or string.sub (String, -string.len (End)) == End
+  return End == '' or string.sub (String, -string.len (End)) == End
 end
 
 -- This function will remove all dropped items from the playing area
@@ -104,7 +104,7 @@ centrespawn = function ()
   minetest.place_schematic(centre_transformed, schempath.."/"..name..".mts")
 end
 
--- Function to spawn the nth island
+-- Function to spawn the Nth island
 islandspawn = function (n)
   --minetest.set_node(eggwars.islands[n],{name = "eggwars:egg"})
   local schem_l = table.copy(eggwars.islands[n]);
