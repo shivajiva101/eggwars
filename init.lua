@@ -10,6 +10,7 @@ eggwars = {}
 eggwars.MP = minetest.get_modpath("eggwars")
 
 dofile(eggwars.MP.."/register_nodes.lua")
+dofile(eggwars.MP.."/shop.lua")
 
 -------------------------
 -- SECION: Coordinates --
@@ -26,6 +27,23 @@ eggwars.islands = {
     {x=35,y=100,z=35},
     {x=-35,y=100,z=-35}
 }
+
+-- Inventory, based on MT 0.4.13's
+eggwars.inventory_form = [[size[8,9]
+	bgcolor[#080808BB;true]
+	background[5,5;1,1;gui_formbg.png;true]
+	listcolors[#00000069;#5A5A5A;#141318;#30434C;#FFF]
+	list[current_player;main;0,4.25;8,1;]
+	list[current_player;main;0,5.5;8,3;8]
+	list[current_player;craft;1.75,0.5;3,3;]
+	list[current_player;craftpreview;5.75,1.5;1,1;]
+	image[4.75,1.5;1,1;gui_furnace_arrow_bg.png^[transformR270]
+	listring[current_player;main]
+	listring[current_player;craft]
+  image[0,4.25;1,1;gui_hb_bg.png]image[1,4.25;1,1;gui_hb_bg.png]image[2,4.25;1,1;gui_hb_bg.png]image[3,4.25;1,1;gui_hb_bg.png]image[4,4.25;1,1;gui_hb_bg.png]image[5,4.25;1,1;gui_hb_bg.png]image[6,4.25;1,1;gui_hb_bg.png]image[7,4.25;1,1;gui_hb_bg.png]
+	button[0,8.5;4,1;upgradespeed;Upgrade speed (cost: 20 diamonds)]
+  button[4,8.5;4,1;upgradejump;Upgrade jump (cost: 20 diamonds)]
+]]
 
 -------------------------------
 -- Please don't modify these --
@@ -182,6 +200,16 @@ minetest.register_chatcommand("register", {
 	end,
 })
 
+minetest.register_chatcommand("start", {
+	params = "",
+	description = "Starts the game",
+	func = function(name, param)
+    if #eggwars.registered_players > 0 then
+      begin_match()
+    end
+  end
+})
+
 begin_match = function ()
   for k=1,#eggwars.registered_players do
     local player = minetest.get_player_by_name(eggwars.registered_players[k]);
@@ -192,6 +220,7 @@ begin_match = function ()
     player:setpos(eggwars.islands[k])
     player_i[player_n] = eggwars.islands[k];
     players_alive[i] = player_n;
+    player:set_inventory_formspec(eggwars.inventory_form)
     eggwars.player_properties[player_n] = {speed = 1.0, jump = 1.0} --Not adding non-upgradeable properties.
   end
 	centrespawn();
@@ -199,12 +228,12 @@ begin_match = function ()
   eggwars.registered_players = {}; -- Reset list of registered players
 end
 
+
+
 minetest.register_on_joinplayer(function(player)
   minetest.set_node(eggwars.waiting_area, {name = "default:dirt_with_grass"})
   player:setpos(eggwars.waiting_area)
 end)
-
-dofile(eggwars.MP.."/shop.lua")
 
 minetest.set_mapgen_params({mgname = "singlenode"})
 minetest.debug('[LOADED] Eggwars')
