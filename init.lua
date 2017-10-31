@@ -14,7 +14,7 @@ dofile(eggwars.MP.."/register_nodes.lua")
 -------------------------
 -- SECION: Coordinates --
 -------------------------
-eggwars.waiting_area = {x=0,y=1000,z=0};
+eggwars.waiting_area = {x=0,y=1001,z=0};
 local centre = {x=0,y=100,z=0}
 eggwars.islands = {
     {x=50,y=100,z=0},
@@ -37,6 +37,7 @@ local player_i = {}; -- A table with the player names and their island.
 local players_alive = {};
 local player_colours = {};
 local match_running = false;
+eggwars.player_properties = {};
 
 ------------------------------------------------
 -- Allowed colours for nametags, chat and HUD --
@@ -191,6 +192,7 @@ begin_match = function ()
     player:setpos(eggwars.islands[k])
     player_i[player_n] = eggwars.islands[k];
     players_alive[i] = player_n;
+    eggwars.player_properties[player_n] = {speed = 1.0, jump = 1.0} --Not adding non-upgradeable properties.
   end
 	centrespawn();
 	match_running = true;
@@ -201,6 +203,8 @@ minetest.register_on_joinplayer(function(player)
   minetest.set_node(eggwars.waiting_area, {name = "default:dirt_with_grass"})
   player:setpos(eggwars.waiting_area)
 end)
+
+dofile(eggwars.MP.."/shop.lua")
 
 minetest.set_mapgen_params({mgname = "singlenode"})
 minetest.debug('[LOADED] Eggwars')
