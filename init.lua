@@ -204,7 +204,7 @@ minetest.register_chatcommand("start", {
 	params = "",
 	description = "Starts the game",
 	func = function(name, param)
-    if #eggwars.registered_players > 0 then
+    if #eggwars.registered_players > 0 then -- Can't have a match on their own!
       begin_match()
     end
   end
@@ -216,6 +216,7 @@ begin_match = function ()
     local player_n = eggwars.registered_players[k];
     minetest.set_player_privs(player_n, {interact=true,shout=true});
     player:set_nametag_attributes({color = allowed_colours[k]})
+    player_colours[player_n] = allowed_colours[k]
     islandspawn(k);
     player:setpos(eggwars.islands[k])
     player_i[player_n] = eggwars.islands[k];
@@ -228,12 +229,70 @@ begin_match = function ()
   eggwars.registered_players = {}; -- Reset list of registered players
 end
 
-
-
 minetest.register_on_joinplayer(function(player)
   minetest.set_node(eggwars.waiting_area, {name = "default:dirt_with_grass"})
   player:setpos(eggwars.waiting_area)
 end)
+
+-- Let's colour the chat!
+
+minetest.register_on_chat_message(function(name, message)
+  local found = false;
+  for i=1,#players_alive do
+    if players_alive[i] == name then
+      found = true;
+    end
+  end
+  if found == true then
+    -- local colour = "#" .. string.format('%x', player_colours[name].r) .. string.format('%x', player_colours[name].g) .. string.format('%x', player_colours[name].b)
+
+    -- Let's check if the hex version has one or more chars
+    local red = string.format('%x', player_colours[name].r)
+    if red:len() == 1 then
+      red = 0 .. red
+    end
+    local green = string.format('%x', player_colours[name].g)
+    if green:len() == 1 then
+      green = 0 .. green
+    end
+    local blue = string.format('%x', player_colours[name].b)
+    if blue:len() == 1 then
+      blue = 0 .. blue
+    end
+    -- And now concatenate it too
+    local colour = "#" .. red .. green .. blue
+    minetest.chat_send_all(minetest.colorize(colour, "<" .. name .. "> ") .. message)
+  else
+    minetest.chat_send_all("<" .. name .. "> " .. message)
+  end
+  return true;
+end)
+
+minetest.register_chatcommand("who", {
+	params = "",
+	description = "See players in match",
+	func = function(name, param)
+    local text = "Players in match: "
+    for i=1,#players_alive do
+      local red = string.format('%x', player_colours[players_alive[i]].r)
+      if red:len() == 1 then
+        red = 0 .. red
+      end
+      local green = string.format('%x', player_colours[players_alive[i]].g)
+      if green:len() == 1 then
+        green = 0 .. green
+      end
+      local blue = string.format('%x', player_colours[players_alive[i]].b)
+      if blue:len() == 1 then
+        blue = 0 .. blue
+      end
+      -- And now concatenate it too
+      local colour = "#" .. red .. green .. blue
+      text = text .. minetest.colorize(colour,players_alive[i])
+    end
+    minetest.chat_send_player(name,text)
+  end
+})
 
 minetest.set_mapgen_params({mgname = "singlenode"})
 minetest.debug('[LOADED] Eggwars')
