@@ -29,21 +29,21 @@ eggwars.islands = {
 }
 
 -- Inventory, based on MT 0.4.13's
-eggwars.inventory_form = [[size[8,9]
-	bgcolor[#080808BB;true]
-	background[5,5;1,1;gui_formbg.png;true]
-	listcolors[#00000069;#5A5A5A;#141318;#30434C;#FFF]
-	list[current_player;main;0,4.25;8,1;]
-	list[current_player;main;0,5.5;8,3;8]
-	list[current_player;craft;1.75,0.5;3,3;]
-	list[current_player;craftpreview;5.75,1.5;1,1;]
-	image[4.75,1.5;1,1;gui_furnace_arrow_bg.png^[transformR270]
-	listring[current_player;main]
-	listring[current_player;craft]
-  image[0,4.25;1,1;gui_hb_bg.png]image[1,4.25;1,1;gui_hb_bg.png]image[2,4.25;1,1;gui_hb_bg.png]image[3,4.25;1,1;gui_hb_bg.png]image[4,4.25;1,1;gui_hb_bg.png]image[5,4.25;1,1;gui_hb_bg.png]image[6,4.25;1,1;gui_hb_bg.png]image[7,4.25;1,1;gui_hb_bg.png]
-	button[0,8.5;4,1;upgradespeed;Upgrade speed (cost: 20 diamonds)]
-  button[4,8.5;4,1;upgradejump;Upgrade jump (cost: 20 diamonds)]
-]]
+-- eggwars.inventory_form = [[size[8,9]
+-- 	bgcolor[#080808BB;true]
+-- 	background[5,5;1,1;gui_formbg.png;true]
+-- 	listcolors[#00000069;#5A5A5A;#141318;#30434C;#FFF]
+-- 	list[current_player;main;0,4.25;8,1;]
+-- 	list[current_player;main;0,5.5;8,3;8]
+-- 	list[current_player;craft;1.75,0.5;3,3;]
+-- 	list[current_player;craftpreview;5.75,1.5;1,1;]
+-- 	image[4.75,1.5;1,1;gui_furnace_arrow_bg.png^[transformR270]
+-- 	listring[current_player;main]
+-- 	listring[current_player;craft]
+--   image[0,4.25;1,1;gui_hb_bg.png]image[1,4.25;1,1;gui_hb_bg.png]image[2,4.25;1,1;gui_hb_bg.png]image[3,4.25;1,1;gui_hb_bg.png]image[4,4.25;1,1;gui_hb_bg.png]image[5,4.25;1,1;gui_hb_bg.png]image[6,4.25;1,1;gui_hb_bg.png]image[7,4.25;1,1;gui_hb_bg.png]
+-- 	button[0,8.5;4,1;upgradespeed;Upgrade speed (cost: 20 diamonds)]
+--   button[4,8.5;4,1;upgradejump;Upgrade jump (cost: 20 diamonds)]
+-- ]]
 
 -------------------------------
 -- Please don't modify these --
@@ -221,7 +221,7 @@ begin_match = function ()
     player:setpos(eggwars.islands[k])
     player_i[player_n] = eggwars.islands[k];
     players_alive[i] = player_n;
-    player:set_inventory_formspec(eggwars.inventory_form)
+    -- player:set_inventory_formspec(eggwars.inventory_form)
     eggwars.player_properties[player_n] = {speed = 1.0, jump = 1.0} --Not adding non-upgradeable properties.
   end
 	centrespawn();
