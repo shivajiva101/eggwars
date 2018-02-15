@@ -135,7 +135,7 @@ minetest.register_on_dieplayer(function(player)
       player:set_properties({visual_size={x=0, y=0}}) --Make player invisible
       for j=1,#players_alive do
         if players_alive[j] == player:get_player_name() then
-          table.remove(players_alive[j])
+          table.remove(players_alive,j)
         end
       end
       if #players_alive == 1 then
