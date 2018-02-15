@@ -20,7 +20,7 @@ minetest.register_on_player_receive_fields( function(player, formname, fields)
       local inv = minetest.get_inventory({type="player", name=player:get_player_name()})
       if inv:contains_item("main", "default:diamond") then
         inv:remove_item("main","default:diamond 20")
-        lplayer_physics = player:get_physics_override()
+        local player_physics = player:get_physics_override()
         player_physics.speed = player_physics.speed * 1.25
         player:set_physics_override(player_physics)
       end
