@@ -28,26 +28,9 @@ eggwars.islands = {
     {x=-35,y=100,z=-35}
 }
 
--- Inventory, based on MT 0.4.13's
--- eggwars.inventory_form = [[size[8,9]
--- 	bgcolor[#080808BB;true]
--- 	background[5,5;1,1;gui_formbg.png;true]
--- 	listcolors[#00000069;#5A5A5A;#141318;#30434C;#FFF]
--- 	list[current_player;main;0,4.25;8,1;]
--- 	list[current_player;main;0,5.5;8,3;8]
--- 	list[current_player;craft;1.75,0.5;3,3;]
--- 	list[current_player;craftpreview;5.75,1.5;1,1;]
--- 	image[4.75,1.5;1,1;gui_furnace_arrow_bg.png^[transformR270]
--- 	listring[current_player;main]
--- 	listring[current_player;craft]
---   image[0,4.25;1,1;gui_hb_bg.png]image[1,4.25;1,1;gui_hb_bg.png]image[2,4.25;1,1;gui_hb_bg.png]image[3,4.25;1,1;gui_hb_bg.png]image[4,4.25;1,1;gui_hb_bg.png]image[5,4.25;1,1;gui_hb_bg.png]image[6,4.25;1,1;gui_hb_bg.png]image[7,4.25;1,1;gui_hb_bg.png]
--- 	button[0,8.5;4,1;upgradespeed;Upgrade speed (cost: 20 diamonds)]
---   button[4,8.5;4,1;upgradejump;Upgrade jump (cost: 20 diamonds)]
--- ]]
-
--------------------------------
--- Please don't modify these --
--------------------------------
+ -------------------------------
+-- Please don't modify these   --
+ -------------------------------
 local i = 1;
 eggwars.registered_players = {};
 local players_waiting = {};
@@ -57,9 +40,9 @@ local player_colours = {};
 local match_running = false;
 eggwars.player_properties = {};
 
-------------------------------------------------
--- Allowed colours for nametags, chat and HUD --
-------------------------------------------------
+ ------------------------------------------------
+-- Allowed colours for nametags, chat and HUD   --
+ ------------------------------------------------
 local allowed_colours = {
   {r = 0, g = 0, b = 255},
   {r = 0, g = 255, b = 0},
@@ -113,6 +96,7 @@ end
 
 -- Function to spawn centre island
 centrespawn = function ()
+  minetest.delete_area({x=-80, y=50, z=-80}, {x=80,y=150, z=80})
   local centre_transformed = table.copy(centre)
   centre_transformed.y = centre_transformed.y - 1
   centre_transformed.x = centre_transformed.x - 10
@@ -143,31 +127,37 @@ minetest.register_on_dieplayer(function(player)
   --minetest.chat_send_all(minetest.pos_to_string(player_i[player:get_player_name()]))
   --minetest.chat_send_all(minetest.get_node(player_i[player:get_player_name()]).name)
   -- Check if egg exists
-  if minetest.get_node(player_i[player:get_player_name()]).name ~= "eggwars:egg" then
-    minetest.chat_send_all("*** "..player:get_player_name().." is " .. minetest.colorize('red','OUT')) -- if not, remove from game
-    minetest.set_player_privs(player:get_player_name(),{fly=true,fast=true,noclip=true}) -- and give player fly, fast and noclip.
-    player:set_nametag_attributes({color = {a = 255, r = 0, g = 0, b = 0}}) --Make nametag invisible
-    player:set_properties({visual_size={x=0, y=0}}) --Make player invisible
-    for j=1,#players_alive do
-      if players_alive[j] == player:get_player_name() then
-        table.remove(players_alive[j])
+  if player_i[player:get_player_name()] then
+    if minetest.get_node(player_i[player:get_player_name()]).name ~= "eggwars:egg" then
+      minetest.chat_send_all("*** "..player:get_player_name().." is " .. minetest.colorize('red','OUT')) -- if not, remove from game
+      minetest.set_player_privs(player:get_player_name(),{fly=true,fast=true,noclip=true}) -- and give player fly, fast and noclip.
+      player:set_nametag_attributes({color = {a = 255, r = 0, g = 0, b = 0}}) --Make nametag invisible
+      player:set_properties({visual_size={x=0, y=0}}) --Make player invisible
+      for j=1,#players_alive do
+        if players_alive[j] == player:get_player_name() then
+          table.remove(players_alive[j])
+        end
       end
+      if #players_alive == 1 then
+        minetest.chat_send_all(minetest.colorize("green", "*** " .. players_alive[1] .. " has won!"))
+        reset();
+      end
+    else
+      minetest.chat_send_all("*** "..player:get_player_name().." paid Hades a visit but was revived by their egg.")
+      --player:set_player_privs({interact=true,shout=true})
     end
-    if #players_alive == 1 then
-      minetest.chat_send_all(minetest.colorize("green", "*** " .. players_alive[1] .. " has won!"))
-      reset();
-    end
-  else
-    minetest.chat_send_all("*** "..player:get_player_name().." paid Hades a visit but was revived by their egg.")
-    --player:set_player_privs({interact=true,shout=true})
   end
 end)
 
 -- Upon respawning, move players back to their island.
 minetest.register_on_respawnplayer(function(player)
-  local respawn_pos = table.copy(player_i[player:get_player_name()])
-  respawn_pos.y = respawn_pos.y + 2
-  minetest.after(0.1,function () player:setpos(respawn_pos) end) -- Wait until they have actually respawned before moving
+  if player_i[player:get_player_name()] then
+    local respawn_pos = table.copy(player_i[player:get_player_name()])
+    respawn_pos.y = respawn_pos.y + 2
+    minetest.after(0.1,function () player:setpos(respawn_pos) end) -- Wait until they have actually respawned before moving
+  else
+    minetest.after(0.1,function () player:setpos(eggwars.waiting_area) end) -- Wait until they have actually respawned before moving
+  end
 end)
 
 minetest.register_chatcommand("register", {
@@ -221,8 +211,6 @@ begin_match = function ()
     player:setpos(eggwars.islands[k])
     player_i[player_n] = eggwars.islands[k];
     players_alive[i] = player_n;
-    -- player:set_inventory_formspec(eggwars.inventory_form)
-    eggwars.player_properties[player_n] = {speed = 1.0, jump = 1.0} --Not adding non-upgradeable properties.
   end
 	centrespawn();
 	match_running = true;
@@ -293,6 +281,17 @@ minetest.register_chatcommand("who", {
     minetest.chat_send_player(name,text)
   end
 })
+
+-- Kill the player if they fall under a y=50
+-- minetest.register_globalstep(function(dtime)
+--   for i=1,#players_alive do
+--     local curr_player = minetest.get_player_by_name(players_alive[i])
+--     if curr_player:getpos().y < 50 then
+--       curr_player:setpos(eggwars.waiting_area) -- Move them here temporarily to prevent them from dying repeatedly
+--       minetest.after(0.1,function () curr_player:set_hp(0) end)
+--     end
+--   end
+-- end)
 
 minetest.set_mapgen_params({mgname = "singlenode"})
 minetest.debug('[LOADED] Eggwars')

@@ -25,5 +25,4 @@ minetest.register_on_player_receive_fields( function(player, formname, fields)
         player:set_physics_override(player_physics)
       end
     end
-  -- player:set_inventory_formspec(eggwars.inventory_form)
 end)
