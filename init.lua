@@ -110,7 +110,7 @@ end
 -- Function to spawn the Nth island
 islandspawn = function (n)
   --minetest.set_node(eggwars.islands[n],{name = "eggwars:egg"})
-  local schem_l = table.copy(eggwars.islands[n]);
+  local schem_l = table.copy(eggwars.islands[n]) -- Get a copy of the table, so we can modify it to place the schematic properly
   schem_l.y = schem_l.y - 6
   schem_l.x = schem_l.x -7
   schem_l.z = schem_l.z -7
