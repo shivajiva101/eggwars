@@ -28,9 +28,9 @@ eggwars.islands = {
     {x=-35,y=100,z=-35}
 }
 
- -------------------------------
--- Please don't modify these   --
- -------------------------------
+ ---------------------------------
+-- Please don't modify these ;-;  --
+ ---------------------------------
 local i = 1;
 eggwars.registered_players = {};
 local players_waiting = {};
@@ -44,14 +44,14 @@ eggwars.player_properties = {};
 -- Allowed colours for nametags, chat and HUD   --
  ------------------------------------------------
 local allowed_colours = {
-  {r = 0, g = 0, b = 255},
-  {r = 0, g = 255, b = 0},
-  {r = 255, g = 0, b = 0},
-  {r = 200, g = 0, b = 200},
-  {r = 255, g = 255, b = 0},
-  {r = 0, g = 255, b = 255},
+  {r = 0, g = 0, b = 255}, -- Blue
+  {r = 0, g = 255, b = 0}, -- Green
+  {r = 255, g = 0, b = 0}, -- Red
+  {r = 200, g = 0, b = 200}, -- Purple/pink
+  {r = 255, g = 255, b = 0}, -- Yellow
+  {r = 0, g = 255, b = 255}, -- Aqua
   {r = 255, g = 165, b = 0},
-  {r = 0, g = 0, b = 0}
+  {r = 0, g = 0, b = 0} -- Black
 }
 
 function StartsWith (String, Start)
@@ -82,17 +82,17 @@ removeDrops = function ()
 end
 
 -- WIP reset function to restart game
-reset = function ()
-  removeDrops();
-  minetest.delete_area({x=-80, y=50, z=-80}, {x=80,y=150, z=80})
-  players_alive = {};
-  centrespawn();
-  for m=1,#players_alive do
-    if(m < #islands) then
-      islandspawn(m)
-    end
-  end
-end
+-- reset = function ()
+--   removeDrops();
+--   minetest.delete_area({x=-80, y=50, z=-80}, {x=80,y=150, z=80})
+--   players_alive = {};
+--   centrespawn();
+--   for m=1,#players_alive do
+--     if(m < #islands) then
+--       islandspawn(m)
+--     end
+--   end
+-- end
 
 -- Function to spawn centre island
 centrespawn = function ()
@@ -117,7 +117,7 @@ islandspawn = function (n)
   local schempath = minetest.get_modpath("eggwars").."/schems";
   local name = "island"
   minetest.debug("spawn island: " .. minetest.pos_to_string(schem_l))
-  minetest.place_schematic(schem_l, schempath.."/"..name..".mts")
+  minetest.place_schematic(schem_l, schempath.."/"..name..".mts", 0, nil, true)
   return eggwars.islands[n] -- Return spawn point
 end
 
