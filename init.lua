@@ -62,6 +62,13 @@ function EndsWith (String, End)
   return End == '' or string.sub (String, -string.len (End)) == End
 end
 
+-- Force load arena & waiting pos when started.
+for i=1,#eggwars.islands do
+  minetest.forceload_block(eggwars.islands[i], true)
+end
+minetest.forceload_block(eggwars.waiting_area, true)
+minetest.forceload_block(centre, true)
+
 -- This function will remove all dropped items from the playing area
 removeDrops = function ()
   local pos  = {x=0,y=100,z=0}
@@ -109,7 +116,6 @@ end
 
 -- Function to spawn the Nth island
 islandspawn = function (n)
-  --minetest.set_node(eggwars.islands[n],{name = "eggwars:egg"})
   local schem_l = table.copy(eggwars.islands[n]) -- Get a copy of the table, so we can modify it to place the schematic properly
   schem_l.y = schem_l.y - 6
   schem_l.x = schem_l.x -7
@@ -117,7 +123,7 @@ islandspawn = function (n)
   local schempath = minetest.get_modpath("eggwars").."/schems";
   local name = "island"
   minetest.debug("spawn island: " .. minetest.pos_to_string(schem_l))
-  minetest.place_schematic(schem_l, schempath.."/"..name..".mts", 0, nil, true)
+  minetest.place_schematic(schem_l, schempath.."/"..name..".mts", 0, nil, true) -- Force place schematic
   return eggwars.islands[n] -- Return spawn point
 end
 
