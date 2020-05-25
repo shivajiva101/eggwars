@@ -2,7 +2,13 @@ sfinv.register_page("sfinv:shop", {
     title = "Shop",
     get = function(self, player, context)
       -- local name = player:get_player_name()
-      return sfinv.make_formspec(player, context, "size[8,9] bgcolor[#080808BB;true] background[5,5;1,1;gui_formbg.png;true] button[0.1,0.1;4,1;upgradespeed;Upgrade speed (cost: 20 diamonds)] button[4,0.1;4,1;upgradejump;Upgrade jump (cost: 20 diamonds)]", true)
+      local size_def = "size[8,9] "
+      local bgcolor_def = "bgcolor[#080808BB;true] "
+      local bg_def = "background[5,5;1,1;gui_formbg.png;true] "
+      local btn1_def = "button[0.1,0.1;4,1;upgradespeed;Upgrade speed (cost: 20 diamonds)] "
+      local btn2_def = "button[4,0.1;4,1;upgradejump;Upgrade jump (cost: 20 diamonds)]"
+      return sfinv.make_formspec(player, context,
+      size_def..bgcolor_def..bg_def..btn1_def..btn2_def, true)
   end
 })
 
