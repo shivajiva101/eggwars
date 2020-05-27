@@ -9,7 +9,7 @@
 ----------------------------------------------------------------------
 --]]
 
--- Supports a maximum of 8 players currently  
+-- Supports a maximum of 8 players currently
 -- TODO: Make always day to comfortable fight
 
 eggwars = {}
@@ -40,7 +40,7 @@ eggwars.islands = {
  ---------------------------------
 -- Please don't modify these ;-;  --
  ---------------------------------
-local i = 1;
+-- local i = 1;
 eggwars.registered_players = {}; -- index playernames
 local players_waiting = {};
 local player_i = {}; -- A table with the player names and their island.
@@ -50,7 +50,7 @@ local match_running = false;
 eggwars.player_properties = {};
 
 local registry_book = {};
-local player = {
+local ewplayer = {
 	in_lobby = false,
 	in_game = false,
 	is_alive = false,
@@ -120,16 +120,16 @@ end
 
 -- WIP reset function to restart game
 reset = function ()
-   removeDrops();
-   --minetest.delete_area({x=-80, y=50, z=-80}, {x=80,y=150, z=80})
-   players_alive = {};
-  	match_running = false;
-   --centrespawn();
-   --for m=1,#players_alive do
-   --  if(m < #islands) then
-   --    islandspawn(m)
-   --  end
-   --end
+  removeDrops();
+  --minetest.delete_area({x=-80, y=50, z=-80}, {x=80,y=150, z=80})
+  players_alive = {};
+  match_running = false;
+  --centrespawn();
+  --for m=1,#players_alive do
+  --  if(m < #islands) then
+  --    islandspawn(m)
+  --  end
+  --end
 end
 
 -- Function to spawn centre island
@@ -149,7 +149,8 @@ end
 
 -- Function to spawn the Nth island
 islandspawn = function (n)
-  local schem_l = table.copy(eggwars.islands[n]) -- Get a copy of the table, so we can modify it to place the schematic properly
+  -- Get a copy of the table, so we can modify it to place the schematic properly
+  local schem_l = table.copy(eggwars.islands[n])
   schem_l.y = schem_l.y - 6
   schem_l.x = schem_l.x -7
   schem_l.z = schem_l.z -7
@@ -249,6 +250,7 @@ ew.begin_match = function ()
     local current_island_spawn = eggwars.islands[k];
     current_island_spawn.y = current_island_spawn.y + 10
     player:setpos(eggwars.islands[k])
+    current_island_spawn.y = current_island_spawn.y - 10
     player_i[player_n] = eggwars.islands[k];
     players_alive[i] = player_n;
   end
@@ -313,60 +315,62 @@ minetest.register_on_chat_message(function(name, message)
   return true;
 end)
 
-
-
-
 -- Kill the player if they fall under a y=50
-kill_on_exceed_boundaries = function(dtime)
-	if(dtime == .1 ) then
-  end
+kill_on_exceed_boundaries = function()
 	local cur_player = nil;
 	for i=1, #eggwars.registered_players do
 		cur_player = minetest.get_player_by_name(eggwars.registered_players[i]);
-		if cur_player:getpos().y < min_y_registered_waiting_user then
+		if cur_player ~= nil and cur_player:getpos().y < min_y_registered_waiting_user then
 			minetest.debug("Should kill "..eggwars.registered_players[i]);
 			cur_player:setpos(eggwars.waiting_area);
 			minetest.debug("Player ".. eggwars.registered_players[i].." will be moved to "..cur_player:getpos().y )
-			minetest.after(0.1, kill_player_by_name, eggwars.registered_players[i] );
+			kill_player_by_name(eggwars.registered_players[i]);
 		end
 	end
-   for i=1,#players_alive do
-     local curr_player = minetest.get_player_by_name(players_alive[i])
-     if curr_player:getpos().y < min_y_registered_playing_user then
-       curr_player:setpos(eggwars.waiting_area) -- Move them here temporarily to prevent them from dying repeatedly
-       minetest.after(0.1,function () curr_player:set_hp(0) end)
-      end
-   end
+  for i=1,#players_alive do
+    local curr_player = minetest.get_player_by_name(players_alive[i])
+    if curr_player ~= nil and curr_player:getpos().y < min_y_registered_playing_user then
+      -- Move them here temporarily to prevent them from dying repeatedly
+       curr_player:setpos(eggwars.waiting_area)
+       kill_player_by_name(players_alive[i]);
+    end
+  end
+  minetest.after(0.1, kill_on_exceed_boundaries)
 end
 
 kill_player_by_name = function(Username)
 	local player = minetest.get_player_by_name(Username);
 	if player then
 		minetest.debug("Player ".. Username.." is in "..player:getpos().y )
-		minetest.debug("Killing this guy " ..Username);
-		player:set_hp(0);
+    minetest.debug("Killing this guy " ..Username);
+    if(player:get_hp() > 0) then
+      player:set_hp(0);
+    end
 		--player:punch(nil,.5,nil,nil);
 	end
 end
 
-minetest.register_globalstep(kill_on_exceed_boundaries)
+minetest.after(0.1, kill_on_exceed_boundaries)
 
 ew.simulateStart = function()
 	centrespawn();
-	  for k=1,#eggwars.islands do
-    --local player = minetest.get_player_by_name(eggwars.registered_players[k]);
-    --local player_n = eggwars.registered_players[k];
-    --minetest.set_player_privs(player_n, {interact=true,shout=true});
-    --player:set_nametag_attributes({color = allowed_colours[k]})
-    --player_colours[player_n] = allowed_colours[k]
+  for k=1,#eggwars.islands do
+    if eggwars.registered_players[k] ~= nil then 
+      local player = minetest.get_player_by_name(eggwars.registered_players[k]);
+      local player_n = eggwars.registered_players[k];
+      --minetest.set_player_privs(player_n, {interact=true,shout=true});
+      player:set_nametag_attributes({color = allowed_colours[k]})
+      player_colours[player_n] = allowed_colours[k]
 
-    islandspawn(k);
-    local current_island_spawn = eggwars.islands[k];
-    current_island_spawn.y = current_island_spawn.y + 10;
-    minetest.debug("Setting spawn to player "..minetest.pos_to_string(eggwars.islands[k]));
-    --player:setpos(eggwars.islands[k])
-    --player_i[player_n] = eggwars.islands[k];
-    --players_alive[i] = player_n;
+      islandspawn(k);
+      local current_island_spawn = eggwars.islands[k];
+      current_island_spawn.y = current_island_spawn.y + 10;
+      minetest.debug("Setting spawn to player "..minetest.pos_to_string(eggwars.islands[k]));
+      current_island_spawn.y = current_island_spawn.y - 10;
+      player:setpos(eggwars.islands[k])
+      player_i[player_n] = eggwars.islands[k];
+      players_alive[k] = player_n;
+    end
   end
 	match_running = true;
   eggwars.registered_players = {}; -- Reset list of registered players
@@ -396,10 +400,12 @@ ew.register_player = function(name, param)
 				minetest.chat_send_all(#eggwars.registered_players .. "/8 players have registered! Use /register to join.");
 			end
     else
-			minetest.chat_send_player(name,"Sorry. A match is already running. Please use /start once their match has finished.");
+      minetest.chat_send_player(name,
+        "Sorry. A match is already running. Please use /start once their match has finished.");
 		end
 	else
-		minetest.chat_send_player(name,"Sorry. 8 players have already registered. Try registering after their game has begun.")
+    minetest.chat_send_player(name,
+      "Sorry. 8 players have already registered. Try registering after their game has begun.")
 	end
 	go_lobby(name);
 
@@ -430,7 +436,7 @@ end
 -- CHAT COMMANDS
 --
 local register_chat_init_result =  register_chat_handler._init(ew)
-if ( register_chat_init_result.status ~= 0) then 
+if ( register_chat_init_result.status ~= 0) then
   minetest.debug(register_chat_init_result.message)
 end
 
