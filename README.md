@@ -17,3 +17,9 @@ Extract the zip file to mods/ **or** use `git clone https://github.com/shivajiva
 The structures are stored in the schems/ folder. The centre and island files are the centre island and player islands respectively. They are stored using Minetest's MTS files. These do not save metadata, so you cannot prefill chests. If you modify these, please update the offsets for the islands:
 * Centre island: Lines `96-98`
 * Player island: Lines `109-111`
+
+## License
+This project is licensed under AGPL v3. This is similar to the GPLv3, but requires servers that modify the mod to also make their changes available. 
+
+## Contributors
+This project was originally started by wilkgr, but after years of inactivity handed over to shivajiva. 
