@@ -1,0 +1,9 @@
+
+Add the ability to use nodes with metadata in the schematic save/load mechanism
+Add trader entity and functionality
+Add instances
+Add sudden death
+Add weapons
+Add arena shields
+Add instance deletion mechanism
+Add stats
