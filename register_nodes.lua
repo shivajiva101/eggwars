@@ -8,14 +8,14 @@
 ----------------------------------------------------------------------
 
 local cs = {
-	"blue",
-	"green",
-	"red",
-	"purple",
-	"yellow",
-	"aqua",
-	"orange",
-	"pink"
+	{"Blue", "#0000FFFF"},
+	{"Green", "#00FF00FF"},
+	{"Red", "#FF0000FF"},
+	{"Purple", "#7800FFFF"},
+	{"Yellow", "#FFFF00FF"},
+	{"Cyan", "#00FFFFFF"},
+	{"Orange", "#FF9600FF"},
+	{"Pink", "#FF00FFFF"}
 }
 
 ------------------------
@@ -54,10 +54,10 @@ minetest.register_craftitem("eggwars:ruby", {
 ------------------------
 
 for i=1,8 do
-	local t
+
 	minetest.register_node("eggwars:egg" .. i, {
-		description = cs[i] .. "egg",
-		tiles = {"eggwars_" .. cs[i] .. ".png"},
+		description = cs[i][1] .. " egg",
+		tiles = {"^[colorize:" .. cs[i][2]},
 		drawtype = "mesh",
 		mesh = "eggwars_egg.obj",
 		groups = {crumbly = 3},
@@ -71,8 +71,8 @@ for i=1,8 do
 			type = "fixed",
 			fixed = {-0.35, -0.5, -0.35, 0.35, 0.45, 0.35}
 		},
-		on_destruct = function(pos)
-
+		after_dig_node = function(pos, oldnode, oldmetadata, digger)
+		
 		end,
 		can_dig = function(pos, player)
 			local meta = minetest.get_meta(pos)
@@ -82,6 +82,7 @@ for i=1,8 do
 			end
 		end
 	})
+
 end
 
 minetest.register_node("eggwars:gold_spawner", {
