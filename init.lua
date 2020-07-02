@@ -109,6 +109,8 @@ eggwars.player = {}
 -- Local Variables --
 ---------------------
 
+local mod_data = minetest.get_mod_storage() -- mod storage
+
 local load_lobby = mod_data:get_int('lobby') -- returns 0 if missing!
 local lobby = {
   insert_offset = {x=-42, y=-14, z=-30},
@@ -119,7 +121,6 @@ local lobby = {
   }
 }
 local min_match_players = 0 -- min players needed for a match (default = 4)
-local mod_data = minetest.get_mod_storage() -- mod storage
 local MP = minetest.get_modpath("eggwars")
 local registered_players = {} -- temp prematch buffer
 local schempath = MP.."/schems"
