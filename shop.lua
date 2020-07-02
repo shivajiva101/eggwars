@@ -1,28 +1,73 @@
-sfinv.register_page("sfinv:shop", {
-    title = "Shop",
-    get = function(self, player, context)
-      -- local name = player:get_player_name()
-      return sfinv.make_formspec(player, context, "size[8,9] bgcolor[#080808BB;true] background[5,5;1,1;gui_formbg.png;true] button[0.1,0.1;4,1;upgradespeed;Upgrade speed (cost: 20 diamonds)] button[4,0.1;4,1;upgradejump;Upgrade jump (cost: 20 diamonds)]", true)
-  end
+----------------------------------------------------------------------
+-- Eggwars by wilkgr with additional code by shivajiva              --
+-- Licensed under the AGPL v3                                       --
+-- You MUST make any changes you make open source                   --
+-- even if you just run it on your server without publishing it     --
+-- Supports a maximum of 8 players per instance and 8 concurrent    --
+-- instances for a max of 64 players                                --
+----------------------------------------------------------------------
+local context = {}
+local traders = {
+	"Johann",
+	"Celery55",
+	"mOuLDy Coder",
+	"Wilkgr",
+	"Rick O Shae",
+	"Bernie Towndown",
+	"Warden Ruby",
+	"Bin Dinkin"
+}
+
+local trade_list = {
+	{'default:wooden_planks 20', 'default:gold_ingot 5'}
+}
+
+local function form(self)
+	local fs = "size[6,8]" .. default.gui_bg_img
+			.. "label[0.5, 0.1;Trader " .. self.game_name .. "]"
+	return fs
+end
+
+local function trader(self, clicker)
+
+	if not self.game_name then
+		-- add a random trader name
+		self.game_name = traders[math.random(8)]
+		self.nametag = ("Trader %s"):format(self.game_name)
+		self.object:set_properties({
+			nametag = self.nametag,
+			nametag_color = "#00FF00"
+		})
+	end
+
+	local pname = clicker:get_player_name()
+	minetest.show_formspec(pname, "eggwars:trade", form(self))
+end
+
+minetest.register_entity("eggwars:trader", {
+	hp_max = 1,
+	physical = true,
+	collisionbox = {-0.35,-1.0,-0.35, 0.35,0.8,0.35},
+	visual = "mesh",
+	mesh = "character.b3d",
+	textures = {
+		{"eggwars_trader.png"},
+		{"eggwars_trader2.png"},
+		{"eggwars_trader3.png"},
+	},
+	view_range = 15,
+	drops = {},
+	drawtype = "front",
+	type = "npc",
+	follow = false,
+
+	on_rightclick = function(self, clicker)
+		trader(self, clicker)
+	end,
 })
 
 minetest.register_on_player_receive_fields( function(player, formname, fields)
-	  minetest.chat_send_all("Player "..player:get_player_name().." submitted fields "..dump(fields));
-    if fields.upgradejump then
-      local inv = minetest.get_inventory({type="player", name=player:get_player_name()})
-      if inv:contains_item("main", "default:diamond") then
-        inv:remove_item("main","default:diamond 20")
-        local player_physics = player:get_physics_override()
-        player_physics.jump = player_physics.jump * 1.25
-        player:set_physics_override(player_physics)
-      end
-    elseif fields.upgradespeed then
-      local inv = minetest.get_inventory({type="player", name=player:get_player_name()})
-      if inv:contains_item("main", "default:diamond") then
-        inv:remove_item("main","default:diamond 20")
-        local player_physics = player:get_physics_override()
-        player_physics.speed = player_physics.speed * 1.25
-        player:set_physics_override(player_physics)
-      end
-    end
+
+  if not formname == "eggwars:trade" then return end
+
 end)
