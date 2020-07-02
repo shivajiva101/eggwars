@@ -1,9 +1,14 @@
---[[
-eggwars mod (C) 2020 by wilkgr & shivajiva
+----------------------------------------------------------------------
+-- Eggwars by wilkgr with additional code by shivajiva              --
+-- Licensed under the AGPL v3                                       --
+-- You MUST make any changes you make open source                   --
+-- even if you just run it on your server without publishing it     --
+-- Supports a maximum of 8 players per instance and 8 concurrent    --
+-- instances for a max of 64 players                                --
+----------------------------------------------------------------------
 
-	Parts of the code in this file are modified or copied
-	from worldedit by Uberi https://github.com/Uberi/Minetest-WorldEdit
-]]
+-- Parts of the code in this file are modified or copied
+-- from worldedit by Uberi https://github.com/Uberi/Minetest-WorldEdit
 
 local HEADER = 5 .. ":"
 local jit_available = jit ~= nil
@@ -142,8 +147,8 @@ local function shield(pos, vol, remove)
 		node_2 = node_1
 		msg = "Warning: Area unprotected!"
 	else
-		node_1 = minetest.get_content_id("eggwars:pclip")
-		node_2 = minetest.get_content_id("eggwars:kill")
+		node_1 = minetest.get_content_id("maptools:playerclip")
+		node_2 = minetest.get_content_id("maptools:kill")
 		msg = "Warning: Area now shielded"
 	end
 	local stride = {x=1, y=area.ystride, z=area.zstride}
@@ -182,6 +187,16 @@ local function shield(pos, vol, remove)
 	return count, msg
 end
 
+--- Fixes lighting within a region
+-- @param pos1 start vector
+-- @param pos2 end vector
+-- @return nothing
+function eggwars.fixlight(pos1, pos2)
+	local vmanip = minetest.get_voxel_manip(pos1, pos2)
+	vmanip:write_to_map()
+	vmanip:update_map() -- update lighting
+end
+
 --- Clears all objects in a region.
 -- @return The number of objects cleared.
 function eggwars.clear_objects(pos1, pos2)
@@ -206,9 +221,8 @@ function eggwars.clear_objects(pos1, pos2)
 			(center.z - pos1z) ^ 2)
 	local count = 0
 	for _, obj in pairs(minetest.get_objects_inside_radius(center, radius)) do
-		local entity = obj:get_luaentity()
-		-- Avoid players and entities
-		if not obj:is_player() and (not entity) then
+		-- Avoid players
+		if not obj:is_player() then
 			local pos = obj:getpos()
 			if pos.x >= pos1x and pos.x <= pos2x and
 					pos.y >= pos1y and pos.y <= pos2y and
@@ -222,7 +236,7 @@ function eggwars.clear_objects(pos1, pos2)
 	return count
 end
 
---- Sets a region to `node_names`.
+--- Sets a region to `air`.
 -- @param pos1
 -- @param pos2
 -- @return The number of nodes set.
@@ -232,7 +246,7 @@ function eggwars.delete_area(pos1, pos2)
 	local manip, area = init(pos1, pos2)
 	local data = get_empty_data(area)
 
-	local node_id = minetest.get_content_id("air")
+	local node_id = minetest.get_content_id('air')
 	-- Fill area with node
 	for i in area:iterp(pos1, pos2) do
 		data[i] = node_id
@@ -241,10 +255,6 @@ function eggwars.delete_area(pos1, pos2)
 	manip:set_data(data)
 	manip:write_to_map()
 	manip:update_map()
-
-	local vmanip = minetest.get_voxel_manip(pos1, pos2)
-	vmanip:write_to_map()
-	vmanip:update_map() -- this updates the lighting
 
 	return volume(pos1, pos2)
 end
@@ -390,10 +400,10 @@ if eggwars.armor then
 	-- @return nothing
 	eggwars.clear_armor = function(player)
 
-	local player_inv = player:get_inventory()
+		local player_inv = player:get_inventory()
 
-	player_inv:set_list("armor", {}) -- clear
-	armor:set_player_armor(player) -- luacheck: ignore
+		player_inv:set_list("armor", {}) -- clear
+		armor:set_player_armor(player) -- luacheck: ignore
 
 	end
 end
