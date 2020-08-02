@@ -1,3 +1,3 @@
 default
-sfinv
-maptools
+armor?
+bows?

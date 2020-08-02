@@ -1,5 +1,6 @@
 ----------------------------------------------------------------------
--- Eggwars by wilkgr with additional code by shivajiva              --
+-- Eggwars by wilkgr																								--
+-- with additional code by shivajiva101@hotmail.com		              --
 -- Licensed under the AGPL v3                                       --
 -- You MUST make any changes you make open source                   --
 -- even if you just run it on your server without publishing it     --
@@ -8,101 +9,13 @@
 ----------------------------------------------------------------------
 
 minetest.set_mapgen_params({mgname = "singlenode"})
+math.randomseed(os.time())
 
 eggwars = {}
-
-eggwars.arena = {
-  colour = {
-    {r = 0, g = 0, b = 255}, -- Blue
-    {r = 0, g = 255, b = 0}, -- Green
-    {r = 255, g = 0, b = 0}, -- Red
-    {r = 108, g = 0, b = 255}, -- Purple
-    {r = 255, g = 255, b = 0}, -- Yellow
-    {r = 0, g = 255, b = 255}, -- Aqua
-    {r = 255, g = 165, b = 0}, -- Orange
-    {r = 255, g = 0, b = 255} -- Pink
-  },
-  egg = {
-    {x=-5, y=0, z=0},
-    {x=-5, y=0, z=0},
-    {x=-5, y=0, z=0},
-    {x=-5, y=0, z=0},
-    {x=-5, y=0, z=0},
-    {x=-5, y=0, z=0},
-    {x=-5, y=0, z=0},
-    {x=-5, y=0, z=0}
-  },
-  hub = {
-    insert_offset = {x=-30, y=-16, z=-30},
-    region = {
-      p1 = {x=-30, y=-20, z=-30},
-      p2 = {x=30, y=30, z=30}
-    }
-  },
-  -- Confined to 90 degree rotations the current schema
-  -- places 2 islands per side of a square, giving us 8
-  -- islands max per instance. Each island is displaced
-  -- equally from the arena centre position using the
-  -- island vector table
-  island = {
-    {x=100, y=0, z=-25}, -- BL
-    {x=-100, y=0, z=-25}, -- TL
-    {x=100, y=0, z=25}, -- BR
-    {x=-100, y=0, z=25}, -- TR
-    {x=25, y=0, z=-100}, -- LB
-    {x=-25, y=0, z=-100}, -- LT
-    {x=25, y=0, z=100}, -- RB
-    {x=-25, y=0, z=100}, -- RT
-    insert_offset = {x=-11, y=-23, z=-10}
-  },
-  nodes = {
-    -- node timer position offsets
-    diamond = {}, -- relative to arena pos
-    gold = {
-      {x=-4, y=-1, z=-2}, -- indexed relative to island
-      {x=4, y=-1, z=2},
-      {x=-4, y=-1, z=-2},
-      {x=-4, y=-1, z=-2},
-      {x=-4, y=-1, z=-2},
-      {x=-4, y=-1, z=-2},
-      {x=-4, y=-1, z=-2},
-      {x=-4, y=-1, z=-2}
-    },
-    ruby = {} -- relative to arena pos
-  },
-  pos = {
-    {x=0, y=0, z=0},
-    {x=200, y=0, z=200},
-    {x=400, y=0, z=400},
-    {x=600, y=0, z=600},
-    {x=800, y=0, z=800},
-    {x=1000, y=0, z=1000},
-    {x=1200, y=0, z=1200},
-    {x=1400, y=0, z=1400}
-  },
-  region = {
-    p1 = {x=-120, y=-30, z=-120},
-    p2 = {x=120, y=100, z=120}
-  },
-  rotate = {"0", "180", "270", "90", "0", "180", "270", "90"},
-  trader = {
-    {x=-5, y=0, z=0}, -- indexed relative to island
-    {x=-5, y=0, z=0},
-    {x=-5, y=0, z=0},
-    {x=-5, y=0, z=0},
-    {x=-5, y=0, z=0},
-    {x=-5, y=0, z=0},
-    {x=-5, y=0, z=0},
-    {x=-5, y=0, z=0}
-  }
-}
-eggwars.armor = minetest.get_modpath("armor") ~= nil
-eggwars.maptools = minetest.get_modpath("maptools") ~= nil
+eggwars.arena = {}
+eggwars.armor = minetest.get_modpath("3d_armor") ~= nil
+eggwars.bows = minetest.get_modpath("bows") ~= nil
 eggwars.match = {}
-eggwars.nodetimer = {}
-eggwars.nodetimer.diamond = {}
-eggwars.nodetimer.gold = {}
-eggwars.nodetimer.ruby = {}
 eggwars.player = {}
 
 ---------------------
@@ -111,7 +24,17 @@ eggwars.player = {}
 
 local mod_data = minetest.get_mod_storage() -- mod storage
 
-local load_lobby = mod_data:get_int('lobby') -- returns 0 if missing!
+local arena_pos = {
+	{x=0, y=0, z=0},
+	{x=300, y=0, z=0},
+	{x=0, y=0, z=300},
+	{x=300, y=0, z=300},
+	{x=-300, y=0, z=0},
+	{x=0, y=0, z=-300},
+	{x=-300, y=0, z=-300},
+	{x=-600, y=0, z=0}
+}
+local loaded = minetest.deserialize(mod_data:get_string('loaded')) or {arena = {}}
 local lobby = {
   insert_offset = {x=-42, y=-14, z=-30},
   pos = {x=0, y=1000, z=0},
@@ -122,35 +45,93 @@ local lobby = {
 }
 local min_match_players = 0 -- min players needed for a match (default = 4)
 local MP = minetest.get_modpath("eggwars")
+local WP = minetest.get_worldpath()
 local registered_players = {} -- temp prematch buffer
-local schempath = MP.."/schems"
+local schempath = MP.."/schems/"
+local stats = minetest.deserialize(mod_data:get_string('STATS')) or {}
+local last_state = minetest.deserialize(mod_data:get_string('LSTATE')) or {}
+local tmp_tbl, tmp_hud = {}, {}
+local timer = 0
+local r_rate = 5
 
--- local sdata = minetest.deserialize(mod_data:get_string('data')) or {}
+stats.rankings = stats.rankings or {}
 
+dofile(MP .. "/register_arena.lua")
 dofile(MP.."/register_nodes.lua")
 dofile(MP.."/shop.lua")
 dofile(MP .. "/extender.lua")
+dofile(MP .. "/tools.lua")
 
 ----------------------
 -- Helper Functions --
 ----------------------
 
---- Remove objects and replace region with air correctly
+--- Sets server to noon and stops time
+-- @return nothing
+local function set_time()
+	minetest.settings:set('time_speed', 0)
+	minetest.set_timeofday(0.5) -- noon
+end
+
+--- Remove objects and replace region with air
+-- @param pos1 - vector table
+-- @param pos2 - vector table
 -- @return nothing
 local function clean(pos1, pos2)
-  eggwars.clear_objects(pos1, pos2)
-  eggwars.delete_area(pos1, pos2)
+  eggwars.clear_nodes(pos1, pos2)
   eggwars.fixlight(pos1, pos2)
+	eggwars.clear_objects(pos1, pos2)
+end
+
+--- Remove objects and replace region with air
+-- @param pos - vector table
+-- @param region - vector pair table
+-- @return nothing
+local function clear(pos, region)
+  local p1 = vector.add(pos, region.p1)
+  local p2 = vector.add(pos, region.p2)
+	clean(p1, p2)
+end
+
+--- Save persistant data
+-- @return nothing
+local function save_persistant()
+	mod_data:set_string('STATS', minetest.serialize(stats))
+	mod_data:set_string('LSTATE', minetest.serialize(last_state))
+	mod_data:set_string('loaded', minetest.serialize(loaded))
+end
+
+--- Create and return a unique integer
+-- @param tbl temp table
+-- @param from - start integer
+-- @param to - end integer
+-- @return random unique integer between from & to
+local function my_random(tbl, from, to)
+	local num = math.random (from, to)
+	if tbl[num] then num = my_random(tbl, from, to) end
+	tbl[num]=num
+  return num
+end
+
+--- Generate a random unique list for the trader name order
+-- @return table of unique random integers
+local function gen_trader_order()
+	local tbl = {}
+	for i=1,8 do
+		tbl[#tbl+1] = my_random(tmp_tbl, 1, 8)
+	end
+	tmp_tbl = {}
+	return tbl
 end
 
 --- Finds first unused arena index
 -- @return integer index or nil if all arenas are in use!
 local function next_index()
 
-  for i, _ in ipairs(eggwars.arena.pos) do
+  for i, _ in ipairs(arena_pos) do
     local used
-    for _, v in ipairs(eggwars.match) do
-      if v.index == i then
+    for _, v in pairs(eggwars.match) do
+      if v.id == i then
         used = true
         break -- jump to the outer loop
       end
@@ -159,237 +140,770 @@ local function next_index()
   end
 end
 
---- Inserts lobby in world and protects it
+-- Check path for correct file presence
+-- @param path: folder to check
+-- @param name: filename without extension
+-- @return truth table including count
+local function check_files(path, name)
+
+	local extension, file, err
+	local list = {}
+	list.n = 0
+	extension = {"mts", "ewm"}
+
+	for _, entry in ipairs(extension) do
+		local filename = path .. name .. "." .. entry
+		file, err = ie.io.open(filename, "rb")
+		if err then
+			list[entry] = false
+		else
+			file:close()
+			list[entry] = true
+			list.n = list.n + 1
+		end
+	end
+
+	return list
+end
+
+--- Inserts & protects the lobby in a new instance
 -- @return nothing
 local function add_lobby()
   -- calculate insertion pos, place schema, protect & save to settings
   local pos = vector.add(lobby.pos, lobby.insert_offset)
-  minetest.place_schematic(pos, schempath.."/hub.mts", nil, true)
+  minetest.place_schematic(pos, schempath.."lobby.mts")
   eggwars.protect(lobby.region.p1, lobby.region.p2, false)
-  load_lobby = 1
-  mod_data:set_int("lobby", load_lobby)
+  loaded.lobby = true
+  save_persistant()
+end
+
+-- lobby loading
+if not loaded.lobby then
+	minetest.after(0, add_lobby)
+end
+
+--- Add match status flags to players HUD
+-- @param key - match key string
+-- @return nothing
+local function gen_match_hud(key)
+
+	local match = eggwars.match[key]
+	local pos = - (0.5 * (#match.player * 20) - 2)
+	local result = {}
+	for k, def in pairs(match.player) do
+		local ndef = {
+			hud_elem_type = 'image',
+			position = {x=0.5, y=1},
+			scale = {x=1, y=1},
+			text = def.hud_img[1],
+			alignment = {x=0, y=0}, -- table reqd
+			offset = {x=pos, y=-100}
+		}
+		table.insert(result, ndef)
+		pos = pos + 20
+	end
+
+	for k, def in pairs(match.player) do
+		local player = minetest.get_player_by_name(k)
+		for i, v in ipairs(result) do
+			def.hud_id[i] = player:hud_add(v)
+		end
+		-- Add Pil
+		def.pil = player:hud_add({
+			hud_elem_type = 'image',
+			position = {x=0, y=1},
+			scale = {x=1, y=0.5},
+			text = 'eggwars_pil.png',
+			alignment = {x=0, y=0}, -- table reqd
+			offset = {x=70, y=-20}
+		})
+		-- Add match time element
+		def.remaining = player:hud_add({
+			hud_elem_type = 'text',
+			position = {x=0, y=1},
+			scale = {x=128, y=64},
+			text = 'Remaining: ' .. match.hud_time .. 'm',
+			number = '0x00FF00',
+			alignment = {x=0, y=0}, -- table reqd
+			offset = {x=70, y=-20}
+		})
+	end
+end
+
+--- Remove match status flags from players HUD
+-- @param key - arena key string
+-- @return nothing
+local function remove_match_hud(key)
+	for k, def in pairs(eggwars.match[key].player) do
+		local obj = minetest.get_player_by_name(k)
+		for _, v in ipairs(def.hud_id) do
+			obj:hud_remove(v)
+		end
+		obj:hud_remove(def.remaining)
+		obj:hud_remove(def.pil)
+	end
+end
+
+--- Update match status flag in players HUD
+-- @param key - arena key string
+-- @param id - hud element id
+-- @return nothing
+local function update_hud(key, id)
+	for k, def in pairs(eggwars.match[key].player) do
+		local obj = minetest.get_player_by_name(k)
+		if not id then
+			obj:hud_change(def.remaining, 'text', 'Remaining: ' ..
+				eggwars.match[key].hud_time .. 'm')
+		else
+			obj:hud_change(def.hud_id[id], 'text', def.hud_img[2])
+		end
+	end
+end
+
+--- Add an image that removes itself to a players HUD
+-- @param player - object
+-- @param image_string - filename of image
+-- @param timer - time in seconds it displays
+-- @return nothing
+local function add_hud_image(player, image_string, timer)
+	local name = player:get_player_name()
+	tmp_hud[name] = player:hud_add({
+		hud_elem_type = 'image',
+		position = {x=0.5, y=0.5},
+		scale = {x=1, y=1},
+		text = image_string,
+		alignment = {x=0, y=0}, -- table reqd
+		offset = {x=0, y=0}
+	})
+	minetest.after(timer, function(name)
+		eggwars.remove_hud_image(name)
+	end, name)
+end
+
+--- Remove recipes blocked in arena defs
+-- NOTE: this function MUST NOT be run with minetest.after it will
+-- cause a SIGSEGV error on server shutdown!!!
+-- @return nothing
+local function modify_recipes()
+	for i, arena in ipairs(eggwars.arena) do
+		for j, v in ipairs(arena.blocked_recipes) do
+			minetest.clear_craft(v)
+		end
+	end
+end
+modify_recipes()
+
+--- Make non expempt nodes unbreakable
+-- @return nothing
+local function modify_game()
+	-- create a list of exempt nodes from the registered arenas
+	local exempt_node = {}
+	for _, arena in ipairs(eggwars.arena) do
+		for _,v in ipairs(arena.exempt_nodes) do
+			table.insert(exempt_node, v)
+		end
+	end
+	-- parse registered nodes
+	for item, def in pairs(minetest.registered_nodes) do
+		local modify = true
+		for i,v in ipairs(exempt_node) do
+			if string.find(item, v) then
+				modify = false
+				break
+			end
+		end
+		if modify then
+			minetest.override_item(item, {groups = {unbreakable=1},})
+		end
+	end
+end
+
+--- Provides match events based on time
+-- @return nothing
+local function match_timer()
+	-- process each match
+	for key, def in pairs(eggwars.match) do
+		def.tmr = def.tmr + r_rate
+		if not def.sd and def.tmr >= def.suddendeath then
+			def.sd = true
+			for k, v in pairs(def.player) do
+				-- remove remaining eggs
+				if v.egg then
+					minetest.remove_node(v.eggpos)
+					v.egg = false
+					minetest.sound_play("eggwars_out", {
+						to_player = k,
+						gain = 1.0,
+					})
+					update_hud(key, v.hud_id)
+				end
+				minetest.sound_play("eggwars_sudden", {
+					to_player = k,
+					gain = 1.0,
+				})
+				add_hud_image(
+				minetest.get_player_by_name(k),
+				'eggwars_suddendeath.png', 5
+				)
+			end
+		end
+		if def.sd and def.tmr >= def.max_time then
+			for k, v in pairs(def.player) do
+				minetest.sound_play("eggwars_time_over", {
+						to_player = k,
+						gain = 1.0,
+					})
+					add_hud_image(
+					minetest.get_player_by_name(k),
+					'eggwars_timeover.png', 5
+					)
+			end
+			eggwars.end_match(key)
+		end
+	end
+	-- finally retrigger
+	minetest.after(r_rate, match_timer)
+end
+
+--- Initialises stats for a new player
+-- @param name - players name string
+-- @return nothing
+local function initialise_stats(name)
+	stats.player = stats.player or {}
+	if not stats.player[name] then
+		stats.player[name] = {
+			damage = 0,
+			eggs = 0,
+			falls = 0,
+			kills = 0,
+			pb = {
+				time = 0, -- utc
+				kills = 0,
+				falls = 0,
+				damage = 0
+			},
+			plays = 0,
+			rank = 0,
+			wins = 0,
+		}
+	end
+end
+
+--- Displays match results as a formspec
+-- @param match_rank - table of ranked match players
+-- @param arena_id - integer index of arena
+-- @return nothing
+local function display_match_results(match_rank, arena_id)
+	local get_player_by_name = minetest.get_player_by_name
+	local fs = {
+		'size[8,6]',
+		'label[0,0;Rank]',
+		'label[1,0;Name]',
+		'label[4,0;Kills]',
+		'label[5,0;Points]',
+		'label[6.1,0;Eggs]',
+		'label[7,0;Falls]'
+	}
+	for i, v in ipairs(match_rank) do
+		local c = eggwars.arena[arena_id].colour[v.id]
+		fs[#fs+1] = 'label[0,'..(0.5 * i)..';'..eggwars.colorize(c, i)..']'
+		fs[#fs+1] = 'label[1,'..(0.5 * i)..';'..eggwars.colorize(c, v.name)..']'
+		fs[#fs+1] = 'label[4,'..(0.5 * i)..';'..eggwars.colorize(c, v.kills)..']'
+		fs[#fs+1] = 'label[5,'..(0.5 * i)..';'..eggwars.colorize(c, v.damage)..']'
+		fs[#fs+1] = 'label[6.1,'..(0.5 * i)..';'..eggwars.colorize(c, v.eggs)..']'
+		fs[#fs+1] = 'label[7,'..(0.5 * i)..';'..eggwars.colorize(c, v.falls)..']'
+	end
+	fs[#fs+1] = 'button_exit[3,5;2,1;btn_e;OK]'
+	local res = table.concat(fs)
+	for i, v in ipairs(match_rank) do
+		local player = get_player_by_name(v.name)
+		if player then
+			minetest.show_formspec(v.name, '', res)
+		end
+	end
+
+end
+
+--- Updates match players game time hud display every minute
+-- @return nothing
+local function update_hud_time()
+		for key, match in pairs(eggwars.match) do
+			match.hud_time = match.hud_time - 1
+			update_hud(key)
+		end
+		minetest.after(60, update_hud_time)
+end
+
+--- Spawns a player in air, attempts to prevent spawn trap
+-- @return nothing
+local function safe_spawn(minp)
+	local maxp = vector.new(minp.x, minp.y + 30, minp.z)
+	minp.y = minp.y + 1
+	local pos = minetest.find_nodes_in_area(minp, maxp, 'air')
+	local res = minp
+	for i,v in ipairs(pos) do
+		if res.y == v.y - 1 then
+			return res -- 2 vertical air nodes
+		else
+			res = v
+		end
+	end
+end
+
+--- Removes a player hud image if its registered
+-- @param name - players name
+-- @return nothing
+eggwars.remove_hud_image = function(name)
+	if tmp_hud[name] then
+		local player = minetest.get_player_by_name(name)
+		player:hud_remove(tmp_hud[name])
+		tmp_hud[name] = nil
+	end
 end
 
 -------------------
 -- API Functions --
 -------------------
 
---- Reset arena by index
--- @param n integer index of arena
+--- Displays message for items that cannot be dropped
 -- @return nothing
-eggwars.reset = function(n)
-  local pos = eggwars.arena.pos[n]
-  local p1 = vector.add(pos, eggwars.arena.region.p1)
-  local p2 = vector.add(pos, eggwars.arena.region.p2)
+eggwars.drop_msg = function(itemstack, player)
+	local name = player:get_player_name()
+	minetest.chat_send_player(name, "Don't be silly, you can't drop that!")
+end
+
+--- Reset arena by index
+-- @param arena integer index of registered arena
+-- @param n integer index of arena instance
+-- @return nothing
+eggwars.reset = function(arena, n)
+	local def = eggwars.arena[arena]
+  local pos = arena_pos[n]
+  local p1 = vector.add(pos, def.region.p1)
+  local p2 = vector.add(pos, def.region.p2)
   clean(p1, p2)
 end
 
--- lobby hub islands for an arena instance
+--- Spawn hub islands for an arena instance
+-- @param arena integer index of registered arena
 -- @param n integer index of arena
 -- @return nothing
-eggwars.centrespawn = function(n)
-  local sp = eggwars.arena.pos[n]
-  local p1 = vector.add(sp, eggwars.arena.hub.region.p1)
-  local p2 = vector.add(sp, eggwars.arena.hub.region.p2)
-  local p3 = vector.add(sp, eggwars.arena.hub.insert_offset)
-  clean(p1, p2)
-  minetest.place_schematic(p3, schempath.."/centre.mts", nil, true)
+eggwars.centrespawn = function(id, n)
+	local def = eggwars.arena[id]
+  local spwn = arena_pos[n]
+  local p1 = vector.add(spwn, def.hub.offset)
+  minetest.place_schematic(p1, schempath .. def.hub.schem)
+	-- place satellites
+	for i,v in ipairs(def.satellite.pos) do
+		p1 = vector.add(vector.add(spwn, v), def.satellite.offset)
+		minetest.place_schematic(p1, schempath ..
+			def.satellite.schem)
+	end
 end
 
 --- Spawn island at pos, indexed by n
+-- @param arena integer index of registered arena
 -- @param pos vector table
 -- @param n integer index of island coords
 -- @return spawn vector
-eggwars.islandspawn = function(pos, n)
-  local p1 = vector.subtract(pos, 15)
-  local p2 = vector.add(pos, 15)
-  local p3 = vector.add(pos, eggwars.arena.island.insert_offset)
-  clean(p1, p2)
-  minetest.place_schematic(p3, schempath.."/island_u.mts", eggwars.arena.rotate[n])
+eggwars.islandspawn = function(arena, pos, n)
+	local def = eggwars.arena[arena].island
+  local p1 = vector.add(pos, def.offset)
+  minetest.place_schematic(p1, schempath .. def.schem, def.rotate[n])
   return pos
+end
+
+--- Creates & protects an arena type in the world
+-- @param id - arena index
+-- @param n - arena position indexeggwars.match[key]
+-- @return nothing
+eggwars.create_arena = function(id, n)
+	local def = eggwars.arena[id]
+	local pos = arena_pos[n]
+	eggwars.centrespawn(id, n)
+	for i = 1, #def.island do
+		local sp = vector.add(pos, def.island[i])
+		eggwars.islandspawn(id, sp, i)
+	end
+	local v = {
+    p1 = vector.add(pos, def.region.p1),
+    p2 = vector.add(pos, def.region.p2)
+  }
+  eggwars.protect(v.p1, v.p2, false)
+end
+
+--- Deletes an arena from the world
+-- @param id - arena index
+-- @param n - arena position index
+-- @return nothing
+eggwars.delete_arena = function(arena, n)
+	local def = eggwars.arena[arena]
+	local pos = arena_pos[n]
+	local v = {
+    p1 = vector.add(pos, def.region.p1),
+    p2 = vector.add(pos, def.region.p2)
+  }
+	eggwars.reset(arena, n)
+	eggwars.delete_area(v.p1, v.p2)
 end
 
 --- Creates a match instance from registered_players table
 -- @return nothing
 eggwars.begin_match = function ()
-  -- A match consists of an instance of an arena and between 4-8 players
-  --
-  -- match.index - arena index
-  -- match.alive - players alive
+
+  -- A match consists of an instance of a registered arena between 4-8 players
+
+	-- match.alive - players alive count
+  -- match.arena - registered arena index
+	-- match.hud_time - remaining time in minutes
+  -- match.id - instance index
+	-- match.player[name]
+	--		alive = bool status
+	--		color = {r,g,b}
+	--		damage = hp damage
+	--		egg = bool - false if dug
+	--		eggpos = pos of players egg
+	--		eggs = eggs destroyed count
+	--		falls = fall count
+	--		hud_id = hud element ref
+	--		hud_img = image filename
+	--		id = integer - player index in the instance
+	--		kills = kill count
+	--		rate = gold spawner rate in seconds
+	--		shop_items = table of available items
+	--		spawn = spawn point
+	--		spawner = pos of gold spawner
+	--		trader = entity obj
+	--
+  -- match.spawners - diamond and ruby spawner positions
+	-- match.stats - match statistics
+	-- match.tmr - match timer
+
+
   local match = {}
-  local n = next_index() -- arena index
-  local pos = eggwars.arena.pos[n] -- base vector
-  eggwars.reset(n)
-  -- spawn players and their islands
-  for i, name in ipairs(registered_players) do
+  local n = next_index() -- arena pos index
+	local pos = arena_pos[n] -- base vector
+	local arena, def, rnd_list, key, spwnr, adj, hud_img
+
+	-- Load nonexistant arena into the map or use saved type
+	if not loaded.arena[n] then
+		arena = math.random(1, #eggwars.arena)
+		def = {
+			arena = arena,
+			pos = pos,
+			id = n
+		}
+		eggwars.create_arena(arena, n)
+		loaded.arena[n] = def
+	else
+		arena = loaded.arena[n].arena
+	end
+
+	-- Process crash cleanup if reqd
+	if #last_state > 0 then
+		for i,v in ipairs(last_state) do
+			if vector.equals(pos, v.pos) then
+				for _, pos in ipairs(v.spawners) do
+					minetest.get_node_timer(pos):stop()
+					local w = minetest.get_objects_inside_radius(pos, 2)
+					for _, object in ipairs(w) do
+						if not object:is_player() then
+							object:remove()
+						end
+					end
+					minetest.remove_node(pos)
+				end
+				last_state[i] = nil
+			end
+		end
+	end
+
+	-- Create state
+	local state = {
+		pos = pos,
+		spawners = {}
+	}
+
+	def = eggwars.arena[arena]
+  rnd_list = gen_trader_order()
+	key = 'm' .. n
+
+	match.alive = #registered_players
+	match.arena = arena
+	match.id = n
+	match.player = {}
+	match.spawners = {}
+
+  for id, name in ipairs(registered_players) do
+
     local player = minetest.get_player_by_name(name)
-    local sp = vector.add(pos, eggwars.arena.island[n])
-    local colour = eggwars.arena.colour[i]
-    local adj = sp
-    eggwars.player[name] = {}
-    eggwars.player[name].color = colour
-    eggwars.player[name].match = n
-    eggwars.player[name].alive = true
-    eggwars.player[name].rate = 5
-    eggwars.player[name].id = i
-    minetest.set_player_privs(name, {interact=true, shout=true})
-    player:set_nametag_attributes({color = colour})
+    local sp = vector.add(pos, def.island[id])
+    local colour = def.colour[id]
+
+		adj = sp
+		spwnr = def.spawners.gold.rate
+		eggwars.player[name] = key
+
+		hud_img = {}
+		hud_img[1] = ('eggwars_%s.png'):format(def.cs[id][3])
+		hud_img[2] = ('eggwars_out_%s.png'):format(def.cs[id][3])
+
+    match.player[name] = {}
+		match.player[name].alive = true
+    match.player[name].color = colour
+		match.player[name].damage = 0
+		match.player[name].egg = true
+		match.player[name].eggs = 0
+		match.player[name].falls = 0
+		match.player[name].hud_img = hud_img
+		match.player[name].hud_id = {}
+		match.player[name].id = id
+		match.player[name].kills = 0
+    match.player[name].rate = spwnr
+    match.player[name].shop_items = {}
+		match.player[name].spawn = sp
+
+		initialise_stats(name)
+
+		player:set_nametag_attributes({color = colour})
     adj.y = adj.y + 2
-    player:set_pos(adj) -- player first!
-    eggwars.player[name].spawn = eggwars.islandspawn(sp, i) -- island
 
-    -- Add spawners and initialise node timers
-    adj = vector.add(sp, eggwars.arena.nodes.gold[i])
+    player:set_pos(adj) -- set player position first
+
+    -- Add gold spawner and initialise node timer
+    adj = vector.add(sp, def.spawners.gold[id])
     minetest.set_node(adj, {name='eggwars:gold_spawner'})
-    minetest.get_node_timer(adj):start(5)
-    eggwars.nodetimer.gold[name] = adj
+    minetest.get_node_timer(adj):start(spwnr)
+    match.player[name].spawner = adj
+		table.insert(state.spawners, adj)
 
-    -- Add egg!
-    adj = vector.add(sp, eggwars.arena.egg[i])
-    minetest.set_node(adj, {name='eggwars:egg'..i})
+		-- Add spawner bot
+		adj = vector.add(sp, def.bot.offset[id])
+		local obj = minetest.add_entity(adj, 'eggwars:bot', name)
+		local yaw = ((math.pi * def.bot.yaw[id])/180)
+		obj:set_yaw(yaw)
+
+    -- Add egg
+    adj = vector.add(sp, def.egg_offset[id])
+    minetest.set_node(adj, {name='eggwars:egg' .. id})
+    match.player[name].eggpos = adj
+
+		-- set metadata
     local meta = minetest.get_meta(adj)
     meta:set_string('owner', name)
     meta:set_string('infotext', name .. "'s egg")
 
-    -- TODO Add trader and upgrade bot entities
+    local trader_name = 'Trader '.. def.trader.names[rnd_list[id]]
+		local staticdata = minetest.serialize({owner = name, nametag = trader_name})
+		adj = vector.add(sp, def.trader.offset[id])
+		obj = minetest.add_entity(adj, 'eggwars:trader', staticdata)
+		yaw = ((math.pi * def.trader.yaw[id])/180)
+		obj:set_yaw(yaw)
+
+		-- Create players shop items table
+		match.player[name].shop_items = {
+			-- Add players wool colour
+			{
+				name = {
+					name="wool:" .. def.cs[id][3],
+					count=20,
+					wear=0,
+					metadata=""
+				},
+				description = def.cs[id][1] .. " Wool",
+				image = 'wool_' .. def.cs[id][3] .. '.png',
+				cost = {name="default:gold_ingot", count=5, wear=0, metadata=""},
+				entry = 0,
+			}
+		}
+		-- Add the registered shop items
+		for j=1, #eggwars.shop_items do -- add the rest
+			table.insert(match.player[name].shop_items, eggwars.shop_items[j])
+		end
+
+		-- Give arena privs
+		minetest.set_player_privs(name, {interact=true, shout=true})
 
   end
 
-  eggwars.centrespawn(n)
+  -- Diamond spawners
+	spwnr = def.spawners.diamond.rate
+	for idx, v in ipairs(def.spawners.diamond) do
+		adj = vector.add(pos, v)
+		minetest.set_node(adj, {name='eggwars:diamond_spawner'})
+    minetest.get_node_timer(adj):start(spwnr)
+		table.insert(match.spawners, adj)
+		table.insert(state.spawners, adj)
+	end
 
-  --TODO Add spawners and initialise node timers
+	-- Ruby spawners
+	spwnr = def.spawners.ruby.rate
+	for idx, v in ipairs(def.spawners.ruby) do
+		adj = vector.add(pos, v)
+		minetest.set_node(adj, {name='eggwars:ruby_spawner'})
+    minetest.get_node_timer(adj):start(spwnr)
+		table.insert(match.spawners, adj)
+		table.insert(state.spawners, adj)
+	end
 
-  -- Contain & kill player at boundary
-  local v = {
-    p1 = vector.add(pos, eggwars.arena.region.p1),
-    p2 = vector.add(pos, eggwars.arena.region.p2)
-  }
-  eggwars.protect(v.p1, v.p2, false)
-  -- initialise match
-  match.index = n
-  match.alive = #registered_players
-  table.insert(eggwars.match, match)
-  -- Reset registered players table
-  registered_players = {};
+	-- initialise match timer vars
+	match.tmr = 0
+	match.max_time = def.timer.max_time
+	match.hud_time = match.max_time / 60 -- minutes
+	match.suddendeath = def.timer.suddendeath
+
+  -- store match
+  eggwars.match[key] = match
+
+	-- Add hud to match players
+	gen_match_hud(key)
+
+	-- persist dirty state in case of crash
+	table.insert(last_state, state)
+	save_persistant()
+
+  registered_players = {} -- reset
 end
 
---- Broadcast match chat
+--- Ends and cleans up a match instance
+-- @param key - match key string
 -- @return nothing
-eggwars.chat_send_match = function(index, msg)
-  for k,v in pairs(eggwars.player) do
-    if v.match == index then
-      minetest.chat_send_player(k, msg)
-    end
-  end
+eggwars.end_match = function(key)
+
+	local def = eggwars.match[key]
+	local match_rank = {}
+	local windex
+
+	remove_match_hud(key)
+
+	for _, pos in ipairs(def.spawners) do
+		minetest.get_node_timer(pos):stop()
+		local w = minetest.get_objects_inside_radius(pos, 2)
+		for _, obj in ipairs(w) do
+			if not obj:is_player() then
+				obj:remove()
+			end
+		end
+		minetest.remove_node(pos)
+	end
+
+	for name, pdef in pairs(def.player) do
+		--stop island spawner
+		minetest.get_node_timer(pdef.spawner):stop()
+		-- remove objects on gold spawner
+		local w = minetest.get_objects_inside_radius(pdef.spawner, 2)
+		for _, obj in ipairs(w) do
+			if not obj:is_player() then
+				obj:remove()
+			end
+		end
+		-- remove spawner node
+		minetest.remove_node(pdef.spawner)
+		-- Update stats
+		local s = stats.player[name]
+		s.kills = s.kills + pdef.kills
+		s.falls = s.falls + pdef.falls
+		s.damage = s.damage + pdef.damage
+		s.plays = s.plays + 1
+
+		if pdef.win then
+			s.wins = s.wins + 1
+		end
+
+		-- rank match player
+		local res = {
+			damage = pdef.damage,
+			eggs = pdef.eggs,
+			falls = pdef.falls,
+			id = pdef.id, -- colour ref
+			kills = pdef.kills,
+			name = name,
+			win = pdef.win or false
+		}
+		local idx = #match_rank + 1
+
+		for i,v in ipairs(match_rank) do
+			if v.win then windex = i end
+			if res.kills > v.kills then
+				idx = i
+				break
+			end
+		end
+		table.insert(match_rank, idx, res)
+
+		local player = minetest.get_player_by_name(name)
+		if player then
+			-- reset spectator
+			if not pdef.alive then
+				minetest.sound_play("eggwars_game_over", {
+					to_player = name,
+					gain = 0.5
+				})
+				player:set_nametag_attributes({
+					color = {a = 255, r = 255, g = 255, b = 255}}) --Make nametag visible
+				player:set_properties({visual_size={x=1, y=1, z=1}}) --Make player visible
+			else
+				-- reset player
+				if eggwars.armor then eggwars.clear_armor(player) end
+				eggwars.clear_inventory(player)
+				if pdef.win then
+					minetest.chat_send_all(minetest.colorize(
+						"green", "*** " .. name .. " won their match!")
+					)
+					eggwars.add_hud_image(player, 'eggwars_winner.png', 5)
+					minetest.sound_play("eggwars_winner", {
+						to_player = killer,
+						gain = 0.5
+					})
+				end
+			end
+			minetest.set_player_privs(name, {shout=true}) -- set lobby privs
+			player:set_pos(lobby.pos) -- move player
+		end
+		stats.player[name] = s
+		eggwars.player[name] = nil
+	end
+
+	-- rank winner
+	local tmp
+
+	if windex then
+		tmp = match_rank[windex]
+		table.remove(match_rank, windex)
+		table.insert(match_rank, 1, tmp)
+	else
+		tmp = match_rank[1]
+	end
+
+	local rank = {
+		damage = tmp.damage,
+		eggs = tmp.eggs,
+		falls = tmp.falls,
+		kills = tmp.kills,
+		name = tmp.name,
+		wins = stats.player[tmp.name].wins
+	}
+	table.insert(stats.rankings, rank)
+	if #stats.rankings > 1 then
+		table.sort(stats.rankings, function(a,b) return a.wins > b.wins end)
+		if #stats.rankings > 20 then
+			table.remove(stats.rankings, #stats.rankings)
+		end
+	end
+
+	eggwars.reset(def.arena, def.id)
+
+	-- match over so remove it and remove last state
+	eggwars.match[key] = nil
+	last_state[def.id] = nil
+	save_persistant()
+	display_match_results(match_rank, def.arena)
 end
 
--------------------------------------
--- Registered callbacks   --
--------------------------------------
-
-minetest.register_on_dieplayer(function(player)
-
-  local name = player:get_player_name()
-  local pos, game, i
-
-  if eggwars.player[name] then
-    i = eggwars.player[name].id
-    pos = vector.add(eggwars.player[name].spawn, eggwars.arena.egg[i])
-    game = eggwars.player[name].match
-  end
-
-  if pos then
-
-    if minetest.get_node(pos).name ~= "eggwars:egg" .. i then
-
-      minetest.chat_send_all("*** "..name.." is " .. minetest.colorize('red','OUT'))
-
-      minetest.set_player_privs(name, {fly=true,fast=true,shout=true}) -- and give player fly, fast and noclip.
-
-      player:set_nametag_attributes({color = {a = 0, r = 0, g = 0, b = 0}}) --Make nametag invisible
-      player:set_properties({visual_size={x=0, y=0}}) --Make player invisible
-
-      if eggwars.armor then eggwars.clear_armor(player) end
-
-      eggwars.clear_inventory(player)
-      eggwars.player[name].alive = false
-      eggwars.match[game].alive = eggwars.match[game].alive - 1
-
-      if eggwars.match[game].alive == 1 then
-
-        minetest.chat_send_all(minetest.colorize("green", "*** " ..
-          name .. " won their match!"))
-
-        -- TODO add fanfare
-
-        eggwars.reset(game); -- clean up before any remaining players leaves!
-
-        for k, v in pairs(eggwars.players) do
-
-          -- handle match players
-          if v.match == game then
-
-            local obj = minetest.get_player_by_name(k)
-
-            if obj then
-              -- reset spectator nametag and visual size
-              if not v.alive then
-                obj:set_nametag_attributes({
-                  color = {a = 255, r = 255, g = 255, b = 255}}) --Make nametag visible
-                obj:set_properties({visual_size={x=1, y=1, z=1}}) --Make player visible
-              else
-                -- reset the winner
-                if eggwars.armor then eggwars.clear_armor(obj) end
-                eggwars.clear_inventory(obj "Players in match: ")
-              end
-              minetest.set_player_privs(k, {shout=true}) -- set lobby privs
-              obj:set_pos(lobby.pos) -- move player
-            end
-
-            eggwars.player[name] = nil -- remove
-          end
-        end
-
-        eggwars.match[game] = nil -- remove from match table
-      end
-    else
-      -- Clean inventory & announce
-      eggwars.clear_inventory(player)
-      minetest.chat_send_all("*** " ..
-        name.." paid Hades a visit and was revived by their egg.")
-
-    end
-  end
-end)
-
--- Upon respawning, move players back to the lobby
--- or their island if in a match.
-minetest.register_on_respawnplayer(function(player)
-  local name = player:get_player_name()
-  local pos = lobby.pos -- initialise with lobby vector
-  -- match override
-  if eggwars.player[name] then
-    pos = vector.new(eggwars.player[name].spawn)
-    pos.y = pos.y + 2
-  end
-  minetest.after(0.1, function () player:set_pos(pos) end) -- Wait for respawn before moving
-end)
-
-minetest.register_on_joinplayer(function(player)
-  -- handle the player - no items or interact in the hub
-  if eggwars.armor then eggwars.clear_armor(player) end
-  eggwars.clear_inventory(player)
-  minetest.set_player_privs(player:get_player_name(), {shout=true}) --
-  player:set_pos(lobby.pos)
-  -- handle the lobby
-  if load_lobby == 0 then
-    add_lobby()
-  end
-end)
-
-minetest.register_on_leaveplayer(function(player)
-end)
-
+--- Colour a message string using rgb
+-- @param rgb - rgb table
+-- @param msg - string to colour
+-- @return a minetest colorized string
 eggwars.colorize = function(rgb, msg)
   local red = string.format('%x', rgb.r)
   local green = string.format('%x', rgb.g)
@@ -403,55 +917,315 @@ eggwars.colorize = function(rgb, msg)
   return minetest.colorize(colour, msg)
 end
 
--- Let's colour the chat!
+--- Broadcast match chat
+-- @return nothing
+eggwars.chat_send_match = function(key, msg)
+	local def = eggwars.match[key].player
+  for name, _ in pairs(def) do
+		minetest.chat_send_player(name, msg)
+  end
+end
+
+-------------------------------------
+-- Registered callbacks   --
+-------------------------------------
+
+minetest.register_on_dieplayer(function(player, reason)
+
+  local name = player:get_player_name()
+  local key = eggwars.player[name]
+  local def = eggwars.match[key]
+
+  if def then
+
+    if def.player[name].alive and not def.player[name].egg then
+
+      minetest.chat_send_all("*** "..name.." is " ..
+				minetest.colorize('red','OUT'))
+
+      -- set privs for spectating
+      minetest.set_player_privs(name, {fly=true,fast=true,shout=true})
+			eggwars.add_hud_image(player, 'eggwars_out.png', 5)
+
+			-- record the kill
+			local killer
+			if reason.object then
+				killer = reason.object:get_player_name()
+				local upd = def.player[killer].kills + 1
+				def.player[killer].kills = upd
+			end
+
+      -- Make nametag invisible
+      player:set_nametag_attributes({color = {a = 0, r = 0, g = 0, b = 0}})
+      player:set_properties({visual_size={x=0, y=0}}) --Make player invisible
+
+      if eggwars.armor then eggwars.clear_armor(player) end
+
+      def.player[name].alive = false
+      def.alive = def.alive - 1
+
+			eggwars.clear_inventory(player)
+
+			eggwars.match[key] = def
+
+			update_hud(key, def.player[name].id)
+
+			-- Are we down to 1 player alive yet?
+      if def.alive == 1 then
+				def.player[killer].win = true
+
+        eggwars.end_match(key)
+
+      end
+    else
+      -- Clean inventory & announce
+      eggwars.clear_inventory(player)
+      minetest.chat_send_all("*** " ..
+        name.." paid Hades a visit and was revived by their egg.")
+    end
+  end
+end)
+
+minetest.register_on_respawnplayer(function(player)
+  local name = player:get_player_name()
+  local pos = lobby.pos -- initialise with lobby vector
+  -- match override
+  if eggwars.player[name] then
+		local key = eggwars.player[name]
+    pos = vector.new(eggwars.match[key].player[name].spawn)
+  end
+	player:set_pos(safe_spawn(pos))
+	return true
+	-- Wait for respawn before moving
+  --minetest.after(0.1, function () player:set_pos(pos) end)
+end)
+
+minetest.register_on_joinplayer(function(player)
+  -- handle the player - no items or interact in the hub
+  if eggwars.armor then eggwars.clear_armor(player) end
+  eggwars.clear_inventory(player)
+	local name = player:get_player_name()
+  minetest.set_player_privs(name, {shout=true}) --
+  player:set_pos(lobby.pos)
+	add_hud_image(player, 'eggwars_welcome.png', 10)
+	tmp_hud[name] = {}
+end)
+
+minetest.register_on_leaveplayer(function(player)
+	-- Handle players exiting during a match
+	local name = player:get_player_name()
+	local key = eggwars.player[name]
+	local def = eggwars.match[key]
+	if key then
+		def.player[name].alive = false
+		def.alive = eggwars.match[def.match].alive - 1
+		eggwars.match[key] = def
+	end
+	if tmp_hud[name] then tmp_hud[name] = nil end
+end)
+
 minetest.register_on_chat_message(function(name, message)
+	-- Let's colour the chat!
   local txt = "<" .. name .. "> " .. message
   if eggwars.player[name] then
-    txt = eggwars.colorize(eggwars.player[name].colour, message)
-    eggwars.chat_send_match(eggwars.player[name].match, txt)
+		local key = eggwars.player[name]
+		local def = eggwars.match[key]
+    txt = eggwars.colorize(def.player[name].color, message)
+    eggwars.chat_send_match(key, txt)
   else
     -- player in lobby
     minetest.chat_send_all(txt) -- broadcast
   end
-  return true -- return as handled!arena.island
+  return true -- return as handled!
 end)
+
+minetest.register_on_player_hpchange(function(player, hp_change, reason)
+	if player then
+		local name = player:get_player_name()
+		local key = eggwars.player[name]
+		local match = eggwars.match[key]
+		if reason.object then
+			local pname = reason.object:get_player_name()
+			local damage = match.player[pname].damage + hp_change
+			eggwars.match[key].player[pname].damage = damage
+		elseif reason.type == 'fall' then
+			local falls = match.player[name].falls + 1
+			eggwars.match[key].player[name].falls = falls
+		end
+	end
+end, false)
 
 -----------------------------------------
 -- Registered chat commands   --
 -----------------------------------------
+minetest.register_chatcommand('admin', {
+	description = 'gamehub management tool',
+	params = '{load|save} [name]',
+	func = function(name, param)
+		-- secure access
+		if not minetest.get_player_privs(name).server then
+			return false, "Insufficient privs!"
+		end
+
+		local cmd, fn, pos1, pos2, helper, list, param2, player
+
+		helper = [[Usage:
+		/admin load <filename>
+		/admin save <filename> <pos1> <pos2>
+		]]
+
+		list = {}
+		player = minetest.get_player_by_name(name)
+
+		if not player then
+			return false, "You need to be playing to use this command!"
+		end
+
+		for word in param:gmatch("%S+") do
+			list[#list+1] = word
+		end
+
+		if #list < 2 then return false, helper end
+
+		cmd = list[1]
+		fn = list[2]
+
+		if cmd == 'load' then
+
+			-- last entry takes precedence
+			local folders = {
+				MP .. "/schems/",
+				WP .. "/schems/"
+			}
+
+			local path, folder, file, err, msg
+			msg = {}
+			for i, v in ipairs(folders) do
+
+				local check = check_files(v, fn)
+
+				if check.n == 2 then
+
+					folder = v
+					msg[#msg+1] = "file set found in " .. v
+
+				elseif check.n == 1 then
+					msg[#msg+1] = v.."."..k.." found..."
+				elseif check.n == 0 then
+					msg[#msg + 1] = "no files found in " .. v
+				end
+
+				minetest.chat_send_player(name,	table.concat(msg, "\n"))
+
+				check.n = nil -- reset
+
+			end
+
+			if not folder then return end
+
+			path = folder .. fn .. ".mts"
+
+			-- add mts using player current pos
+			local pos = vector.round(player:get_pos())
+
+			err = minetest.place_schematic(pos, path, nil, nil, true)
+
+			if err == nil then
+				minetest.chat_send_player(name,	"could not open file " .. path)
+				return
+			end
+
+			-- add nodes with metadata
+			path = folder .. fn .. ".ewm"
+			file, err = ie.io.open(path, "rb")
+
+			if err then
+				minetest.chat_send_player(name,	"could not open meta file "
+				.. fn .. ".ewm")
+				return
+			end
+
+			local value = file:read("*a")
+			file:close()
+
+			local count = eggwars.deserialize(pos1, value)
+
+			minetest.chat_send_player(name, "replaced " .. count ..
+			" nodes...")
+
+		elseif cmd == 'save' then
+
+			pos1 = vector.new(list[3])
+			pos2 = vector.new(list[4])
+
+			local area = areas.areas[id]
+
+			-- serialize metadata
+			local result, count = eggwars.serialize_meta(pos1, pos2)
+
+			local path = WP .. "/schems"
+			local filename = path .. "/" .. fn .. ".ewm"
+			local file, err = io.open(filename, "wb")
+
+			if err ~= nil then
+				minetest.log(name, "Could not save file to \"" .. filename .. "\"")
+				return
+			end
+
+			file:write(result)
+			file:flush()
+			file:close()
+
+			minetest.chat_send_player(name, "Saved " .. count ..
+			" nodes to \"" .. filename .. "\"")
+
+			-- create schematic
+			filename = path .. "/" .. fn .. ".mts"
+			minetest.create_schematic(area.pos1, area.pos2, nil, filename)
+
+			minetest.chat_send_player(name, "Saved \"" .. filename .. "\"")
+
+		else
+			return true, helper
+		end
+	end
+})
 
 -- register for a match
-minetest.register_chatcommand("register", {
+minetest.register_chatcommand("r", {
 	params = "",
 	description = "Join match",
 	func = function(name, param)
 		if #registered_players < 8 then -- max 8 players in a match
-	    if #eggwars.match < #eggwars.arena.pos then -- max matches
+	    if #eggwars.match < 8 then -- max 8 matches on the server
         for i, v in ipairs(registered_players) do
           if registered_players[v] == name then
-            minetest.chat_send_player(name,"You have already registered")
-            return
+            return true, "You have already registered"
           end
         end
+				eggwars.remove_hud_image(name)
         registered_players[#registered_players+1] = name;
 	      if #registered_players == 8 then
 	        eggwars.begin_match();
 	      else
-					minetest.chat_send_all(#registered_players .. "/8 players have registered! Use /register to join.");
+					minetest.chat_send_all(#registered_players ..
+						"/8 players have registered! Use /register to join.");
 				end
 	    else
-				minetest.chat_send_player(name,"Sorry the max number of games are running. Please use /start once a match has finished.");
+				return true, "Sorry the max number of games are running." ..
+				"Please use /start once a match finishes."
 			end
 		else
-			minetest.chat_send_player(name,"Sorry. 8 players have already registered. Try registering after their game has begun.")
+			return true, "Sorry. 8 players have already registered." ..
+			"Try registering after their game has begun."
 		end
 	end,
 })
 
 -- start match
-minetest.register_chatcommand("start", {
+minetest.register_chatcommand("s", {
 	params = "",
-	description = "Starts the game",
+	description = "Starts match if min match players has been reached",
 	func = function(name, param)
     if #registered_players >= min_match_players then
       eggwars.begin_match()
@@ -459,34 +1233,83 @@ minetest.register_chatcommand("start", {
   end
 })
 
-minetest.register_chatcommand("add", {
+-- quit match
+minetest.register_chatcommand("q", {
 	params = "",
-	description = "Starts the game",
+	description = "Quit the match you are playing",
 	func = function(name, param)
-    if #registered_players >= min_match_players then
-      eggwars.begin_match()
+    if #registered_players > 0 then
+			for i, v in ipairs(registered_players) do
+				if registered_players[v] == name then
+					registered_players[v] = nil
+					return true, "match quit!"
+				end
+			end
+    end
+		if eggwars.player[name] then
+			local key, match, player, count
+			key = eggwars.player[name]
+			match = eggwars.match[key]
+			player = match.player[name]
+			if player.egg then
+				minetest.remove_node(player.eggpos)
+			end
+			count = match.alive - 1
+			eggwars.match[key].alive = count
+			eggwars.match[key].player[name].alive = false
+			eggwars.match[key].player[name].egg = false
+			eggwars.player[name] = nil
+			if match.alive == 1 then
+				for k,v in pairs(eggwars.match[key].player) do
+					if v.alive then
+						v.win = true
+						minetest.chat_send_all(minetest.colorize(
+							"green", "*** " .. name .. " won their match!")
+						)
+						local obj = minetest.get_player_by_name(k)
+						eggwars.add_hud_image(obj, 'eggwars_winner.png', 5)
+						eggwars.end_match(key)
+						break
+					end
+				end
+			end
+		end
+  end
+})
+
+-- end match - development
+minetest.register_chatcommand("e", {
+	params = "",
+	description = "End the game",
+	func = function(name, param)
+		local key = eggwars.player[name]
+    if key then
+      eggwars.end_match(key)
     end
   end
 })
 
 -- list players
 minetest.register_chatcommand("who", {
-	params = "<index>",
-	description = "List players in match <index>",
+	params = "",
+	description = "List players in matches",
 	func = function(name, param)
-    if not param then return "missing param!" end
-    if param < 1 or param > #eggwars.match then
-      return "param out of bounds!"
-    end
-    local text = {}
-    text[#text+1] =  "Players in match: " .. param .. " "
-    for k, v in pairs(eggwars.player) do
-      if v.match == param then
-        text[#text+1] = eggwars.colorize(v.color, k)
-      end
-    end
-    minetest.chat_send_player(name, table.concat(text))
+		local text = {}
+		for k,v in pairs(eggwars.match) do
+			text[#text+1] =  "Players in match: " .. k .. " "
+			for key, def in pairs(v.player) do
+	      text[#text+1] = eggwars.colorize(def.color, key)
+	    end
+			text[#text+1] = '\n'
+		end
+    return true, table.concat(text)
   end
 })
 
-minetest.log('info', '[LOADED] Eggwars')
+-- run functions after all mods are loaded!
+minetest.after(0, modify_game)
+minetest.after(0, set_time)
+minetest.after(0, match_timer)
+minetest.after(0, update_hud_time)
+
+minetest.log('action', '[LOADED] Eggwars')
