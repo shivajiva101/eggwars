@@ -43,7 +43,7 @@ local lobby = {
     p2 = {x=83, y=1030, z=83}
   }
 }
-local min_match_players = 0 -- min players needed for a match (default = 4)
+local min_match_players = 4 -- min players needed for a match (default = 4)
 local MP = minetest.get_modpath("eggwars")
 local WP = minetest.get_worldpath()
 local registered_players = {} -- temp prematch buffer
@@ -1282,6 +1282,7 @@ minetest.register_chatcommand("e", {
 	params = "",
 	description = "End the game",
 	func = function(name, param)
+		if not name == minetest.settings:get("owner") then return end
 		local key = eggwars.player[name]
     if key then
       eggwars.end_match(key)
