@@ -1044,11 +1044,11 @@ minetest.register_on_player_hpchange(function(player, hp_change, reason)
 		local name = player:get_player_name()
 		local key = eggwars.player[name]
 		local match = eggwars.match[key]
-		if reason.object then
+		if eggwars.player[name] and reason.object then
 			local pname = reason.object:get_player_name()
 			local damage = match.player[pname].damage + hp_change
 			eggwars.match[key].player[pname].damage = damage
-		elseif reason.type == 'fall' then
+		elseif eggwars.player[name] and reason.type == 'fall' then
 			local falls = match.player[name].falls + 1
 			eggwars.match[key].player[name].falls = falls
 		end
