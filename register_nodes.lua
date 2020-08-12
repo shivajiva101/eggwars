@@ -1,220 +1,137 @@
--- Probably find a use for this I s'pose... May not.
-minetest.register_node("eggwars:pedestal", {
-	tiles = {
-		"default_wood.png",
-		"default_wood.png",
-		"default_wood.png",
-		"default_wood.png",
-		"default_wood.png",
-		"default_wood.png"
-	},
-	drawtype = "nodebox",
-	paramtype = "light",
-	node_box = {
-		type = "fixed",
-		fixed = {
-			{-0.375, -0.4375, -0.375, 0.375, -0.3125, 0.375}, -- NodeBox2
-			{-0.5, -0.5, -0.5, 0.5, -0.4375, 0.5}, -- NodeBox3
-			{-0.4375, -0.5, -0.4375, 0.4375, -0.375, 0.4375}, -- NodeBox4
-			{-0.1875, -0.5, -0.1875, 0.1875, 0.5, 0.1875}, -- NodeBox5
-			{-0.5, 0.4375, -0.5, 0.5, 0.5, 0.5}, -- NodeBox6
-			{-0.4375, 0.375, -0.4375, 0.4375, 0.5, 0.4375}, -- NodeBox7
-			{-0.5, 0.3125, -0.375, 0.5, 0.5, 0.375}, -- NodeBox8
-		}
-	}
-})
-minetest.register_node("eggwars:egg", {
-	description = "Egg",
-	tiles = {
-		"default_stone.png",
-		"default_stone.png",
-		"default_stone.png",
-		"default_stone.png",
-		"default_stone.png",
-		"default_stone.png"
-	},
-  groups = {crumbly = 3},
-	drawtype = "nodebox",
-	paramtype = "light",
-	node_box = {
-		type = "fixed",
-		fixed = {
-			{-0.1875, -0.5, -0.1875, 0.1875, 0.5, 0.1875}, -- NodeBox1
-			{-0.25, -0.4375, -0.25, 0.25, 0.4375, 0.25}, -- NodeBox2
-			{-0.3125, -0.375, -0.3125, 0.3125, 0.3125, 0.3125}, -- NodeBox3
-			{-0.375, -0.3125, -0.375, 0.375, 0.1875, 0.375}, -- NodeBox4
-			{-0.4375, -0.25, -0.4375, 0.4375, 0.0625, 0.4375}, -- NodeBox5
-			{-0.5, -0.125, -0.5, 0.5, -0.0625, 0.5}, -- NodeBox6
-		}
-	}
+----------------------------------------------------------------------
+-- Eggwars by wilkgr																								--
+-- with additional code by shivajiva101@hotmail.com		              --
+-- Licensed under the AGPL v3                                       --
+-- You MUST make any changes you make open source                   --
+-- even if you just run it on your server without publishing it     --
+-- Supports a maximum of 8 players per instance and 8 concurrent    --
+-- instances for a max of 64 players                                --
+----------------------------------------------------------------------
+
+------------------------
+-- on_timer functions --
+------------------------
+
+local function goldspawner(pos, elapsed)
+	local sp = vector.new(pos.x, pos.y + 3, pos.z)
+	minetest.add_item(sp, "default:gold_ingot")
+	return true
+end
+
+local function rubyspawner(pos, elapsed)
+	local sp = vector.new(pos.x, pos.y + 3, pos.z)
+	minetest.add_item(sp, "eggwars:ruby")
+	return true
+end
+
+local function diamondspawner(pos, elapsed)
+	local sp = vector.new(pos.x, pos.y + 3, pos.z)
+	minetest.add_item(sp, "default:diamond")
+	return true
+end
+
+-----------------
+-- craft items --
+-----------------
+
+minetest.register_craftitem("eggwars:ruby", {
+	description = "Ruby",
+	inventory_image = "eggwars_ruby.png",
 })
 
-minetest.register_node("eggwars:dirt", {
-	description = "Unbreakable Dirt",
-	range = 12,
-	stack_max = 99,
-	tiles = {"default_dirt.png"},
-	drop = "",
-	groups = {unbreakable = 1, not_in_creative_inventory = 1},
-	sounds = default.node_sound_dirt_defaults(),
+------------------------
+-- node registrations --
+------------------------
+
+-- Arena eggs
+for i,v in ipairs(eggwars.arena[1].cs) do
+
+	minetest.register_node("eggwars:egg" .. i, {
+		description = eggwars.arena[1].cs[i][1] .. " egg",
+		tiles = {"eggwars_shell.png^[colorize:" .. eggwars.arena[1].cs[i][2]},
+		drawtype = "mesh",
+		mesh = "eggwars_egg.obj",
+		groups = {crumbly = 3, not_in_creative_inventory = 1},
+		paramtype = "light",
+		--light_source = 14,
+		selection_box = {
+			type = "fixed",
+			fixed = {-0.35, -0.5, -0.35, 0.35, 0.45, 0.35} -- right, bottom, back, left, top, front
+		},
+		collision_box = {
+			type = "fixed",
+			fixed = {-0.35, -0.5, -0.35, 0.35, 0.45, 0.35}
+		},
+		drop = {},
+		on_drop = eggwars.drop_msg,
+		after_dig_node = function(pos, oldnode, oldmetadata, digger)
+			local victim, attacker, msg, key, match, eggs
+			victim = oldmetadata.fields.owner
+			attacker = digger:get_player_name()
+			if not victim then return end -- dev ONLY!
+			key = eggwars.player[victim]
+			match = eggwars.match[key]
+			match.player[victim].egg = false
+			eggs = match.player[attacker].eggs + 1
+			match.player[attacker].eggs = eggs
+			msg = victim .. "'s egg was destroyed by " .. attacker
+			eggwars.chat_send_match(eggwars.player[victim].match, msg)
+		end,
+		can_dig = function(pos, player)
+			local meta = minetest.get_meta(pos)
+			local name = meta:get_string("owner")
+			if name == "" or not name == player:get_player_name() then
+				return true
+			end
+		end
+	})
+
+end
+
+-- Spawners
+minetest.register_node("eggwars:gold_spawner", {
+	description = "Gold ingot spawner",
+	tiles = {"default_stone.png^default_mineral_gold.png"},
+	on_timer = goldspawner
 })
 
-minetest.register_node("eggwars:grass", {
-	description = "Unbreakable Dirt With Grass",
+minetest.register_node("eggwars:ruby_spawner", {
+	description = "Ruby gemstone spawner",
+	tiles = {"default_stone.png^eggwars_mineral_ruby.png"},
+	on_timer = rubyspawner
+})
+
+minetest.register_node("eggwars:diamond_spawner", {
+	description = "Diamond gemstone spawner",
+	tiles = {"default_stone.png^default_mineral_diamond.png"},
+	on_timer = diamondspawner
+})
+
+-- Misc
+minetest.register_node("eggwars:kill", {
+	description = "Kill Block",
 	range = 12,
 	stack_max = 10000,
-	tiles = {"default_grass.png", "default_dirt.png", "default_dirt.png^default_grass_side.png"},
-	paramtype2 = "facedir",
-	drop = "",
-	groups = {unbreakable = 1, not_in_creative_inventory = 1},
-	sounds = default.node_sound_dirt_defaults({
-		footstep = {name="default_grass_footstep", gain = 0.4},
-	}),
-})
-
-minetest.register_node("eggwars:stone_block", {
-	description = "Unbreakable Stone Block",
-	range = 12,
-	tiles = {"default_stone_block.png"},
-	is_ground_content = false,
-	drop = "",
-	groups = {unbreakable = 1, not_in_creative_inventory = 1},
-	sounds = default.node_sound_stone_defaults(),
-})
-
-minetest.register_node("eggwars:aspen_wood", {
-	description = "Unbreakable Aspen Planks",
-	range = 12,
-	paramtype2 = "facedir",
-	place_param2 = 0,
-	tiles = {"default_aspen_wood.png"},
-	drop = "",
-	is_ground_content = false,
-	groups = {unbreakable = 1, not_in_creative_inventory = 1},
-	sounds = default.node_sound_wood_defaults(),
-})
-
-minetest.register_node("eggwars:acacia_wood", {
-	description = "Acacia Wood Planks",
-	range = 12,
-	paramtype2 = "facedir",
-	place_param2 = 0,
-	tiles = {"default_acacia_wood.png"},
-	drop = "",
-	is_ground_content = false,
-	groups = {unbreakable = 1, not_in_creative_inventory = 1},
-	sounds = default.node_sound_wood_defaults(),
-})
-
-minetest.register_node("eggwars:ladder_wood", {
-	description = "Wooden Ladder",
-	drawtype = "signlike",
-	tiles = {"default_ladder_wood.png"},
-	inventory_image = "default_ladder_wood.png",
-	wield_image = "default_ladder_wood.png",
-	paramtype = "light",
-	paramtype2 = "wallmounted",
-	sunlight_propagates = true,
+	inventory_image = "default_steel_block.png^dye_black.png",
+	drawtype = "airlike",
 	walkable = false,
-	climbable = true,
-	is_ground_content = false,
-	selection_box = {
-		type = "wallmounted",
-	},
-    drop = "",
+	pointable = false,
+	damage_per_second = 20,
+	paramtype = "light",
+	sunlight_propagates = true,
+	drop = "",
 	groups = {unbreakable = 1, not_in_creative_inventory = 1},
-	legacy_wallmounted = true,
-	sounds = default.node_sound_wood_defaults(),
 })
 
-minetest.register_node("eggwars:goldspawn1", {
-  tiles = {"default_gold_block.png"}
-})
-
-minetest.register_node("eggwars:stickspawn", {
-  tiles = {"default_aspen_wood.png"}
-})
-
-minetest.register_node("eggwars:diamondspawn", {
-  tiles = {"default_diamond_block.png"}
-})
-
-minetest.register_node("eggwars:steelspawn1", { --Slower spawn rate; for player islands
-  tiles = {"default_steel_block.png"}
-})
-
-minetest.register_node("eggwars:steelspawn2", { --Faster spawn rate; for center island(s)
-  tiles = {"default_diamond_block.png"}
-})
-
-minetest.register_node("eggwars:cobblespawn", {
-  tiles = {"default_cobble.png"}
-})
-
--- Register ABMs
-
--- Diamond spawn. Only for centre island(s)
-minetest.register_abm({
-	nodenames = {"eggwars:diamondspawn"},
-	interval = 8,
-	chance = 1,
-	action = function(pos)
-		pos.y = pos.y + 1
-		minetest.add_item(pos,"default:diamond")
-	end,
-})
-
--- Cobble is the building material
-minetest.register_abm({
-	nodenames = {"eggwars:cobblespawn"},
-	interval = 5,
-	chance = 1,
-	action = function(pos)
-		pos.y = pos.y + 1
-		minetest.add_item(pos,"default:cobble")
-	end,
-})
-
--- Steelspawn1 is slower, ideal for player islands
-minetest.register_abm({
-	nodenames = {"eggwars:steelspawn1"},
-	interval = 10,
-	chance = 1,
-	action = function(pos)
-		pos.y = pos.y + 1
-		minetest.add_item(pos,"default:steel_ingot")
-	end,
-})
-
--- Steelspawn2 is faster, ideal for centre island
-minetest.register_abm({
-	nodenames = {"eggwars:steelspawn2"},
-	interval = 5,
-	chance = 1,
-	action = function(pos)
-		pos.y = pos.y + 1
-		minetest.add_item(pos,"default:steel_ingot")
-	end,
-})
-
--- Stick spawner, for allowing players to craft tools
-minetest.register_abm({
-	nodenames = {"eggwars:stickspawn"},
-	interval = 8,
-	chance = 1,
-	action = function(pos)
-		pos.y = pos.y + 1
-		minetest.add_item(pos,"default:stick")
-	end,
-})
-
--- Goldspawn1 is slower, ideal for player islands
-minetest.register_abm({
-	nodenames = {"eggwars:goldspawn1"},
-	interval = 10,
-	chance = 1,
-	action = function(pos)
-		pos.y = pos.y + 1
-		minetest.add_item(pos,"default:gold_ingot")
-	end,
+minetest.register_node("eggwars:playerclip", {
+	description = "Player Clip",
+	range = 12,
+	stack_max = 10000,
+	inventory_image = "default_steel_block.png^dye_green.png",
+	drawtype = "airlike",
+	paramtype = "light",
+	pointable = false,
+	sunlight_propagates = true,
+	drop = "",
+	groups = {unbreakable = 1, not_in_creative_inventory = 1},
 })
