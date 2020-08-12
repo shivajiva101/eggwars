@@ -27,6 +27,8 @@ Extract the zip file to mods/ **or** use `git clone https://github.com/shivajiva
 * Bows [ https://notabug.org/TenPlus1/bows ]
 
 ![](screenshot.png)
+![](screenshot_2.png)
+![](screenshot_3.png)
 ## Adding your own arena
 Adding your own arena is easy via the API function ``eggwars.register_arena(def) ``
 the default definition can be found in ``register_arena.lua `` and should be used as the reference template for creating your own arenas, it's a keypair table proliferated with comments to help understand what data each key requires. This design concept allows you to use your own schematics for islands, arena hubs and spawner satellites, controlling the positions of all current arena elements. See API.md for more details on this mods API functions and how to use them.
