@@ -20,12 +20,13 @@ Extract the zip file to mods/ **or** use `git clone https://github.com/shivajiva
 
 * Do **NOT** use an existing world - this will overwrite the mapgen and cause destruction.
 * Do not use a different mapgen mod. This will also cause issues
-* Make and use a copy of games/minetest_game called games/eggwars and delete the mods you don't need like beds, boats, bucket, butterflies, carts, dungeon_loot, fireflies, give_initial_stuff, sethome, spawn, vessels, weather
+* Do use a copy of games/minetest_game called games/eggwars and delete the mods you don't need like beds, boats, bucket, butterflies, carts, dungeon_loot, fireflies, give_initial_stuff, sethome, spawn, vessels, weather
 
 ###### Additionally it is highly recommended that you add these mods:
 * 3D armor [ https://github.com/minetest-mods/3d_armor ]
 * Bows [ https://notabug.org/TenPlus1/bows ]
 
+![](screenshot.png)
 ## Adding your own arena
 Adding your own arena is easy via the API function ``eggwars.register_arena(def) ``
 the default definition can be found in ``register_arena.lua `` and should be used as the reference template for creating your own arenas, it's a keypair table proliferated with comments to help understand what data each key requires. This design concept allows you to use your own schematics for islands, arena hubs and spawner satellites, controlling the positions of all current arena elements. See API.md for more details on this mods API functions and how to use them.
