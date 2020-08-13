@@ -992,7 +992,7 @@ minetest.register_on_respawnplayer(function(player)
   -- match override
   if eggwars.player[name] then
 		local key = eggwars.player[name]
-    pos = vector.new(eggwars.match[key].player[name].spawn)
+    pos = eggwars.match[key].player[name].spawn
   end
 	player:set_pos(safe_spawn(pos))
 	return true
