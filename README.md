@@ -39,7 +39,7 @@ This project is licensed under AGPL v3. This is similar to the GPLv3, but requir
 ## Contributors
 This project was originally started by wilkgr, but after years of inactivity handed over to shivajiva.
 
-## Credits
+## Media Attribution & Licenses
 
 ###### Sounds:
 * eggwars_winner.ogg uses https://freesound.org/s/406371/ by SoundBat  (CC0 1.0)
@@ -49,8 +49,11 @@ This project was originally started by wilkgr, but after years of inactivity han
 * eggwars_sudden.ogg uses https://freesound.org/s/476176/ by umdamlar (CC0 1.0)
 
 ###### Textures:
-* All textures created by shivajiva using Gimp (CC BY-NC 4.0)
-* Egg mesh created by shivajiva using Blender (CC BY-NC 4.0)
+* All textures by shivajiva created with Gimp (CC BY-NC 4.0)
+
+###### Models:
+* Egg mesh by shivajiva, created with Blender (CC BY-NC 4.0)
+* NPC Character model sourced from minetest_game v0.4.17  (CC BY-SA 3.0) see minetest_game/mods/default/license.txt
 
 ###### Schematics:
 * created in MT by shivajiva (CC BY-NC 4.0)
