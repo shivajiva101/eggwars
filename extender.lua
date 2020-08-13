@@ -506,11 +506,18 @@ if eggwars.armor then
 	-- @param player; minetest player object
 	-- @return nothing
 	eggwars.clear_armor = function(player)
-
-		local player_inv = player:get_inventory()
-
-		player_inv:set_list("armor", {}) -- clear
-		armor:set_player_armor(player) -- luacheck: ignore
-
+		local name, armor_inv = armor:get_valid_player(player, "[clear_armor]")
+		if not name then
+			return
+		end
+		for i=1, armor_inv:get_size("armor") do
+			local stack = armor_inv:get_stack("armor", i)
+			if stack:get_count() > 0 then
+				armor:run_callbacks("on_unequip", player, i, stack)
+				armor_inv:set_stack("armor", i, nil)
+			end
+		end
+		armor:save_armor_inventory(player)
+		armor:set_player_armor(player)
 	end
 end
