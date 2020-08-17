@@ -44,6 +44,7 @@ local lobby = {
   }
 }
 local min_match_players = 4 -- min players needed for a match (default = 4)
+local owner = minetest.settings:get('name')
 local MP = minetest.get_modpath("eggwars")
 local WP = minetest.get_worldpath()
 local registered_players = {} -- temp prematch buffer
@@ -1069,7 +1070,7 @@ minetest.register_chatcommand('admin', {
 	params = '{load|save} [name]',
 	func = function(name, param)
 		-- secure access
-		if not minetest.get_player_privs(name).server then
+		if not minetest.get_player_privs(name).server and name == owner then
 			return false, "Insufficient privs!"
 		end
 
@@ -1233,7 +1234,7 @@ minetest.register_chatcommand("s", {
 	params = "",
 	description = "Starts match if min match players has been reached",
 	func = function(name, param)
-    if #registered_players >= min_match_players then
+    if #registered_players >= min_match_players or name == owner then
       eggwars.begin_match()
     end
   end
@@ -1288,7 +1289,7 @@ minetest.register_chatcommand("e", {
 	params = "",
 	description = "End the game",
 	func = function(name, param)
-		if not name == minetest.settings:get("owner") then return end
+		if not name == owner then return end
 		local key = eggwars.player[name]
     if key then
       eggwars.end_match(key)
