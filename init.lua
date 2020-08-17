@@ -26,13 +26,13 @@ local mod_data = minetest.get_mod_storage() -- mod storage
 
 local arena_pos = {
 	{x=0, y=0, z=0},
-	{x=300, y=0, z=0},
-	{x=0, y=0, z=300},
-	{x=300, y=0, z=300},
-	{x=-300, y=0, z=0},
-	{x=0, y=0, z=-300},
-	{x=-300, y=0, z=-300},
-	{x=-600, y=0, z=0}
+	{x=1000, y=0, z=0},
+	{x=0, y=0, z=1000},
+	{x=1000, y=0, z=1000},
+	{x=-1000, y=0, z=0},
+	{x=0, y=0, z=-1000},
+	{x=-1000, y=0, z=-1000},
+	{x=-2000, y=0, z=0}
 }
 local loaded = minetest.deserialize(mod_data:get_string('loaded')) or {arena = {}}
 local lobby = {
