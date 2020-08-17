@@ -189,6 +189,7 @@ minetest.register_entity("eggwars:trader", {
 		local data = minetest.deserialize(staticdata)
 		self.owner = data.owner
 		self.nametag = data.nametag
+		self.uid = data.uid
 		self.object:set_armor_groups({immortal = 1})
 		self.object:set_properties({
 			nametag = self.nametag,
@@ -199,13 +200,20 @@ minetest.register_entity("eggwars:trader", {
 		trader_form_handler(clicker)
 	end,
 	on_step = function(self, dtime, ...)
-		if not eggwars.player[self.owner] then
+		local key = eggwars.player[self.owner]
+		if not key then
 			self.object:remove()
+		else
+			local match = eggwars.match[key]
+			if not match.uid == self.uid then
+				self.object:remove()
+			end
 		end
 	end,
 	get_staticdata = function(self)
 		return minetest.serialize({
 			owner = self.owner,
+			uid = self.uid,
 			nametag = self.nametag
 		})
 	end
@@ -222,19 +230,30 @@ minetest.register_entity("eggwars:bot", {
 		visual_size = {x=0.5, y=0.5}
 	},
 	on_activate = function(self, staticdata)
-		self.owner = staticdata
+		local data = minetest.deserialize(staticdata)
+		self.uid = data.uid
+		self.owner = data.owner
 		self.object:set_armor_groups({immortal = 1})
 	end,
 	on_rightclick = function(self, clicker)
 		bot_form_handler(clicker)
 	end,
 	on_step = function(self, dtime, ...)
-		if not eggwars.player[self.owner] then
+		local key = eggwars.player[self.owner]
+		if not key then
 			self.object:remove()
+		else
+			local match = eggwars.match[key]
+			if not match.uid == self.uid then
+				self.object:remove()
+			end
 		end
 	end,
 	get_staticdata = function(self)
-		return self.owner
+		return minetest.serialize({
+			owner = self.owner,
+			uid = self.uid
+		})
 	end
 })
 
