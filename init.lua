@@ -850,7 +850,7 @@ eggwars.end_match = function(key)
 					minetest.chat_send_all(minetest.colorize(
 						"green", "*** " .. name .. " won their match!")
 					)
-					eggwars.add_hud_image(player, 'eggwars_winner.png', 5)
+					add_hud_image(player, 'eggwars_winner.png', 5)
 					minetest.sound_play("eggwars_winner", {
 						to_player = killer,
 						gain = 0.5
@@ -945,7 +945,7 @@ minetest.register_on_dieplayer(function(player, reason)
 
       -- set privs for spectating
       minetest.set_player_privs(name, {fly=true,fast=true,shout=true})
-			eggwars.add_hud_image(player, 'eggwars_out.png', 5)
+			add_hud_image(player, 'eggwars_out.png', 5)
 
 			-- record the kill
 			local killer
