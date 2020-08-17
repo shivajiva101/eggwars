@@ -583,7 +583,9 @@ eggwars.begin_match = function ()
   local match = {}
   local n = next_index() -- arena pos index
 	local pos = arena_pos[n] -- base vector
-	local arena, def, rnd_list, key, spwnr, adj, hud_img
+	local arena, def, rnd_list, key, spwnr, adj, hud_img, uid
+
+	uid = os.time()
 
 	-- Load nonexistant arena into the map or use saved type
 	if not loaded.arena[n] then
@@ -633,6 +635,7 @@ eggwars.begin_match = function ()
 	match.id = n
 	match.player = {}
 	match.spawners = {}
+	match.uid = uid
 
   for id, name in ipairs(registered_players) do
 
@@ -679,7 +682,8 @@ eggwars.begin_match = function ()
 
 		-- Add spawner bot
 		adj = vector.add(sp, def.bot.offset[id])
-		local obj = minetest.add_entity(adj, 'eggwars:bot', name)
+		local staticdata = minetest.serialize({uid = uid, owner = name})
+		local obj = minetest.add_entity(adj, 'eggwars:bot', staticdata)
 		local yaw = ((math.pi * def.bot.yaw[id])/180)
 		obj:set_yaw(yaw)
 
@@ -688,13 +692,14 @@ eggwars.begin_match = function ()
     minetest.set_node(adj, {name='eggwars:egg' .. id})
     match.player[name].eggpos = adj
 
-		-- set metadata
+		-- set egg metadata
     local meta = minetest.get_meta(adj)
     meta:set_string('owner', name)
     meta:set_string('infotext', name .. "'s egg")
 
+		-- Add trader
     local trader_name = 'Trader '.. def.trader.names[rnd_list[id]]
-		local staticdata = minetest.serialize({owner = name, nametag = trader_name})
+		local staticdata = minetest.serialize({owner = name, nametag = trader_name, uid = uid})
 		adj = vector.add(sp, def.trader.offset[id])
 		obj = minetest.add_entity(adj, 'eggwars:trader', staticdata)
 		yaw = ((math.pi * def.trader.yaw[id])/180)
