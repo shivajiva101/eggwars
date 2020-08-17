@@ -8,10 +8,10 @@
 -- instances for a max of 64 players                                --
 ----------------------------------------------------------------------
 
--- default arena definition template, all fields reqd
+-- default arena definition template; all fields reqd!
 local default_arena = {
 	blocked_recipes = {
-		-- Recipes removed from world for gameplay so player MUST purchase items
+		-- Recipes removed from world to control gameplay
 		{output = 'default:stick'}, -- tools
 		{output = '3d_armor:boots_wood'},
 		{output = '3d_armor:helmet_wood'},
@@ -21,6 +21,9 @@ local default_arena = {
 		{output = '3d_armor:helmet_diamond'},
 		{output = '3d_armor:leggings_diamond'},
 		{output = '3d_armor:chestplate_diamond'},
+		{output = 'default:diamondblock'}, -- unbreakables
+		{output = 'default:goldblock'},
+		{output = 'default:skeleton_key'}, -- misc
 	},
 	bot = {
 		-- spawner upgrade bot
