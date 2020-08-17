@@ -66,9 +66,10 @@ dofile(MP .. "/tools.lua")
 -- Helper Functions --
 ----------------------
 
---- Sets server to noon and stops time
+--- Sets server settings (time nametag viewing distance)
 -- @return nothing
-local function set_time()
+local function set_settings()
+	minetest.settings:set('player_transfer_distance', 20)
 	minetest.settings:set('time_speed', 0)
 	minetest.set_timeofday(0.5) -- noon
 end
@@ -1314,7 +1315,7 @@ minetest.register_chatcommand("who", {
 
 -- run functions after all mods are loaded!
 minetest.after(0, modify_game)
-minetest.after(0, set_time)
+minetest.after(0, set_settings)
 minetest.after(0, match_timer)
 minetest.after(0, update_hud_time)
 
