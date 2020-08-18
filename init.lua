@@ -67,11 +67,13 @@ dofile(MP .. "/tools.lua")
 -- Helper Functions --
 ----------------------
 
---- Sets server settings (time nametag viewing distance)
+--- Sets server conf settings
 -- @return nothing
 local function set_settings()
+	minetest.settings:set_bool('unlimited_player_transfer_distance', false)
 	minetest.settings:set('player_transfer_distance', 20)
 	minetest.settings:set('time_speed', 0)
+	minetest.settings:write()
 	minetest.set_timeofday(0.5) -- noon
 end
 
@@ -80,8 +82,8 @@ end
 -- @param pos2 - vector table
 -- @return nothing
 local function clean(pos1, pos2)
-  eggwars.clear_nodes(pos1, pos2)
-  eggwars.fixlight(pos1, pos2)
+	eggwars.clear_nodes(pos1, pos2)
+	eggwars.fixlight(pos1, pos2)
 	eggwars.clear_objects(pos1, pos2)
 end
 
@@ -90,8 +92,8 @@ end
 -- @param region - vector pair table
 -- @return nothing
 local function clear(pos, region)
-  local p1 = vector.add(pos, region.p1)
-  local p2 = vector.add(pos, region.p2)
+	local p1 = vector.add(pos, region.p1)
+	local p2 = vector.add(pos, region.p2)
 	clean(p1, p2)
 end
 
@@ -129,17 +131,16 @@ end
 --- Finds first unused arena index
 -- @return integer index or nil if all arenas are in use!
 local function next_index()
-
-  for i, _ in ipairs(arena_pos) do
-    local used
-    for _, v in pairs(eggwars.match) do
-      if v.id == i then
-        used = true
-        break -- jump to the outer loop
-      end
-    end
-    if not used then return i end
-  end
+	for i, _ in ipairs(arena_pos) do
+		local used
+		for _, v in pairs(eggwars.match) do
+			if v.id == i then
+				used = true
+				break -- jump to the outer loop
+			end
+		end
+		if not used then return i end
+	end
 end
 
 -- Check path for correct file presence
@@ -171,12 +172,12 @@ end
 --- Inserts & protects the lobby in a new instance
 -- @return nothing
 local function add_lobby()
-  -- calculate insertion pos, place schema, protect & save to settings
-  local pos = vector.add(lobby.pos, lobby.insert_offset)
-  minetest.place_schematic(pos, schempath.."lobby.mts")
-  eggwars.protect(lobby.region.p1, lobby.region.p2, false)
-  loaded.lobby = true
-  save_persistant()
+	-- calculate insertion pos, place schema, protect & save to settings
+	local pos = vector.add(lobby.pos, lobby.insert_offset)
+	minetest.place_schematic(pos, schempath.."lobby.mts")
+	eggwars.protect(lobby.region.p1, lobby.region.p2, false)
+	loaded.lobby = true
+	save_persistant()
 end
 
 -- lobby loading
@@ -423,17 +424,16 @@ local function display_match_results(match_rank, arena_id)
 			minetest.show_formspec(v.name, '', res)
 		end
 	end
-
 end
 
 --- Updates match players game time hud display every minute
 -- @return nothing
 local function update_hud_time()
-		for key, match in pairs(eggwars.match) do
-			match.hud_time = match.hud_time - 1
-			update_hud(key)
-		end
-		minetest.after(60, update_hud_time)
+	for key, match in pairs(eggwars.match) do
+		match.hud_time = match.hud_time - 1
+		update_hud(key)
+	end
+	minetest.after(60, update_hud_time)
 end
 
 --- Spawns a player in air, attempts to prevent spawn trap
@@ -480,10 +480,10 @@ end
 -- @return nothing
 eggwars.reset = function(arena, n)
 	local def = eggwars.arena[arena]
-  local pos = arena_pos[n]
-  local p1 = vector.add(pos, def.region.p1)
-  local p2 = vector.add(pos, def.region.p2)
-  clean(p1, p2)
+	local pos = arena_pos[n]
+	local p1 = vector.add(pos, def.region.p1)
+	local p2 = vector.add(pos, def.region.p2)
+	clean(p1, p2)
 end
 
 --- Spawn hub islands for an arena instance
@@ -492,9 +492,9 @@ end
 -- @return nothing
 eggwars.centrespawn = function(id, n)
 	local def = eggwars.arena[id]
-  local spwn = arena_pos[n]
-  local p1 = vector.add(spwn, def.hub.offset)
-  minetest.place_schematic(p1, schempath .. def.hub.schem)
+	local spwn = arena_pos[n]
+	local p1 = vector.add(spwn, def.hub.offset)
+	minetest.place_schematic(p1, schempath .. def.hub.schem)
 	-- place satellites
 	for i,v in ipairs(def.satellite.pos) do
 		p1 = vector.add(vector.add(spwn, v), def.satellite.offset)
@@ -510,9 +510,9 @@ end
 -- @return spawn vector
 eggwars.islandspawn = function(arena, pos, n)
 	local def = eggwars.arena[arena].island
-  local p1 = vector.add(pos, def.offset)
-  minetest.place_schematic(p1, schempath .. def.schem, def.rotate[n])
-  return pos
+	local p1 = vector.add(pos, def.offset)
+	minetest.place_schematic(p1, schempath .. def.schem, def.rotate[n])
+	return pos
 end
 
 --- Creates & protects an arena type in the world
@@ -528,10 +528,10 @@ eggwars.create_arena = function(id, n)
 		eggwars.islandspawn(id, sp, i)
 	end
 	local v = {
-    p1 = vector.add(pos, def.region.p1),
-    p2 = vector.add(pos, def.region.p2)
-  }
-  eggwars.protect(v.p1, v.p2, false)
+		p1 = vector.add(pos, def.region.p1),
+		p2 = vector.add(pos, def.region.p2)
+	}
+	eggwars.protect(v.p1, v.p2, false)
 end
 
 --- Deletes an arena from the world
@@ -542,9 +542,9 @@ eggwars.delete_arena = function(arena, n)
 	local def = eggwars.arena[arena]
 	local pos = arena_pos[n]
 	local v = {
-    p1 = vector.add(pos, def.region.p1),
-    p2 = vector.add(pos, def.region.p2)
-  }
+		p1 = vector.add(pos, def.region.p1),
+		p2 = vector.add(pos, def.region.p2)
+	}
 	eggwars.reset(arena, n)
 	eggwars.delete_area(v.p1, v.p2)
 end
@@ -552,13 +552,11 @@ end
 --- Creates a match instance from registered_players table
 -- @return nothing
 eggwars.begin_match = function ()
-
-  -- A match consists of an instance of a registered arena between 4-8 players
-
+	-- A match consists of an instance of a registered arena between 4-8 players
 	-- match.alive - players alive count
-  -- match.arena - registered arena index
+	-- match.arena - registered arena index
 	-- match.hud_time - remaining time in minutes
-  -- match.id - instance index
+	-- match.id - arena instance index
 	-- match.player[name]
 	--		alive = bool status
 	--		color = {r,g,b}
@@ -577,13 +575,14 @@ eggwars.begin_match = function ()
 	--		spawner = pos of gold spawner
 	--		trader = entity obj
 	--
-  -- match.spawners - diamond and ruby spawner positions
+  	-- match.spawners - diamond and ruby spawner positions
 	-- match.stats - match statistics
 	-- match.tmr - match timer
+	-- match.uid - match id
 
 
-  local match = {}
-  local n = next_index() -- arena pos index
+	local match = {}
+ 	local n = next_index() -- arena pos index
 	local pos = arena_pos[n] -- base vector
 	local arena, def, rnd_list, key, spwnr, adj, hud_img, uid
 
@@ -629,7 +628,7 @@ eggwars.begin_match = function ()
 	}
 
 	def = eggwars.arena[arena]
-  rnd_list = gen_trader_order()
+  	rnd_list = gen_trader_order()
 	key = 'm' .. n
 
 	match.alive = #registered_players
@@ -639,11 +638,11 @@ eggwars.begin_match = function ()
 	match.spawners = {}
 	match.uid = uid
 
-  for id, name in ipairs(registered_players) do
+	for id, name in ipairs(registered_players) do
 
-    local player = minetest.get_player_by_name(name)
-    local sp = vector.add(pos, def.island[id])
-    local colour = def.colour[id]
+		local player = minetest.get_player_by_name(name)
+		local sp = vector.add(pos, def.island[id])
+		local colour = def.colour[id]
 
 		adj = sp
 		spwnr = def.spawners.gold.rate
@@ -653,9 +652,9 @@ eggwars.begin_match = function ()
 		hud_img[1] = ('eggwars_%s.png'):format(def.cs[id][3])
 		hud_img[2] = ('eggwars_out_%s.png'):format(def.cs[id][3])
 
-    match.player[name] = {}
+		match.player[name] = {}
 		match.player[name].alive = true
-    match.player[name].color = colour
+		match.player[name].color = colour
 		match.player[name].damage = 0
 		match.player[name].egg = true
 		match.player[name].eggs = 0
@@ -664,22 +663,22 @@ eggwars.begin_match = function ()
 		match.player[name].hud_id = {}
 		match.player[name].id = id
 		match.player[name].kills = 0
-    match.player[name].rate = spwnr
-    match.player[name].shop_items = {}
+		match.player[name].rate = spwnr
+		match.player[name].shop_items = {}
 		match.player[name].spawn = sp
 
 		initialise_stats(name)
 
 		player:set_nametag_attributes({color = colour})
-    adj.y = adj.y + 2
+		adj.y = adj.y + 2
 
-    player:set_pos(adj) -- set player position first
+		player:set_pos(adj) -- set player position first
 
-    -- Add gold spawner and initialise node timer
-    adj = vector.add(sp, def.spawners.gold[id])
-    minetest.set_node(adj, {name='eggwars:gold_spawner'})
-    minetest.get_node_timer(adj):start(spwnr)
-    match.player[name].spawner = adj
+		-- Add gold spawner and initialise node timer
+		adj = vector.add(sp, def.spawners.gold[id])
+		minetest.set_node(adj, {name='eggwars:gold_spawner'})
+		minetest.get_node_timer(adj):start(spwnr)
+		match.player[name].spawner = adj
 		table.insert(state.spawners, adj)
 
 		-- Add spawner bot
@@ -689,18 +688,18 @@ eggwars.begin_match = function ()
 		local yaw = ((math.pi * def.bot.yaw[id])/180)
 		obj:set_yaw(yaw)
 
-    -- Add egg
-    adj = vector.add(sp, def.egg_offset[id])
-    minetest.set_node(adj, {name='eggwars:egg' .. id})
-    match.player[name].eggpos = adj
+		-- Add egg
+		adj = vector.add(sp, def.egg_offset[id])
+		minetest.set_node(adj, {name='eggwars:egg' .. id})
+		match.player[name].eggpos = adj
 
 		-- set egg metadata
-    local meta = minetest.get_meta(adj)
-    meta:set_string('owner', name)
-    meta:set_string('infotext', name .. "'s egg")
+		local meta = minetest.get_meta(adj)
+		meta:set_string('owner', name)
+		meta:set_string('infotext', name .. "'s egg")
 
 		-- Add trader
-    local trader_name = 'Trader '.. def.trader.names[rnd_list[id]]
+		local trader_name = 'Trader '.. def.trader.names[rnd_list[id]]
 		local staticdata = minetest.serialize({owner = name, nametag = trader_name, uid = uid})
 		adj = vector.add(sp, def.trader.offset[id])
 		obj = minetest.add_entity(adj, 'eggwars:trader', staticdata)
@@ -731,14 +730,14 @@ eggwars.begin_match = function ()
 		-- Give arena privs
 		minetest.set_player_privs(name, {interact=true, shout=true})
 
-  end
+	end
 
-  -- Diamond spawners
+	-- Diamond spawners
 	spwnr = def.spawners.diamond.rate
 	for idx, v in ipairs(def.spawners.diamond) do
 		adj = vector.add(pos, v)
 		minetest.set_node(adj, {name='eggwars:diamond_spawner'})
-    minetest.get_node_timer(adj):start(spwnr)
+	 	minetest.get_node_timer(adj):start(spwnr)
 		table.insert(match.spawners, adj)
 		table.insert(state.spawners, adj)
 	end
@@ -759,8 +758,8 @@ eggwars.begin_match = function ()
 	match.hud_time = match.max_time / 60 -- minutes
 	match.suddendeath = def.timer.suddendeath
 
-  -- store match
-  eggwars.match[key] = match
+	-- store match
+	eggwars.match[key] = match
 
 	-- Add hud to match players
 	gen_match_hud(key)
@@ -769,7 +768,7 @@ eggwars.begin_match = function ()
 	table.insert(last_state, state)
 	save_persistant()
 
-  registered_players = {} -- reset
+	registered_players = {} -- reset
 end
 
 --- Ends and cleans up a match instance
@@ -912,25 +911,26 @@ end
 -- @param msg - string to colour
 -- @return a minetest colorized string
 eggwars.colorize = function(rgb, msg)
-  local red = string.format('%x', rgb.r)
-  local green = string.format('%x', rgb.g)
-  local blue = string.format('%x', rgb.b)
-  -- modify if reqd
-  if red:len() == 1 then red = 0 .. red end
-  if green:len() == 1 then green = 0 .. green end
-  if blue:len() == 1 then blue = 0 .. blue end
-  -- And now concatenate it too
-  local colour = "#" .. red .. green .. blue
-  return minetest.colorize(colour, msg)
+	
+	local red = string.format('%x', rgb.r)
+	local green = string.format('%x', rgb.g)
+	local blue = string.format('%x', rgb.b)
+	-- modify if reqd
+	if red:len() == 1 then red = 0 .. red end
+	if green:len() == 1 then green = 0 .. green end
+	if blue:len() == 1 then blue = 0 .. blue end
+	-- And now concatenate it too
+	local colour = "#" .. red .. green .. blue
+	return minetest.colorize(colour, msg)
 end
 
 --- Broadcast match chat
 -- @return nothing
 eggwars.chat_send_match = function(key, msg)
 	local def = eggwars.match[key].player
-  for name, _ in pairs(def) do
+	for name, _ in pairs(def) do
 		minetest.chat_send_player(name, msg)
-  end
+	end
 end
 
 -------------------------------------
@@ -939,19 +939,17 @@ end
 
 minetest.register_on_dieplayer(function(player, reason)
 
-  local name = player:get_player_name()
-  local key = eggwars.player[name]
-  local def = eggwars.match[key]
+	local name = player:get_player_name()
+	local key = eggwars.player[name]
+	local def = eggwars.match[key]
 
-  if def then
-
-    if def.player[name].alive and not def.player[name].egg then
-
-      minetest.chat_send_all("*** "..name.." is " ..
+	if def then
+		if def.player[name].alive and not def.player[name].egg then
+			minetest.chat_send_all("*** "..name.." is " ..
 				minetest.colorize('red','OUT'))
 
-      -- set privs for spectating
-      minetest.set_player_privs(name, {fly=true,fast=true,shout=true})
+			-- set privs for spectating
+      		minetest.set_player_privs(name, {fly=true,fast=true,shout=true})
 			add_hud_image(player, 'eggwars_out.png', 5)
 
 			-- record the kill
@@ -962,14 +960,13 @@ minetest.register_on_dieplayer(function(player, reason)
 				def.player[killer].kills = upd
 			end
 
-      -- Make nametag invisible
-      player:set_nametag_attributes({color = {a = 0, r = 0, g = 0, b = 0}})
-      player:set_properties({visual_size={x=0, y=0}}) --Make player invisible
+			-- Make nametag invisible
+			player:set_nametag_attributes({color = {a = 0, r = 0, g = 0, b = 0}})
+			player:set_properties({visual_size={x=0, y=0}}) --Make player invisible
 
-      if eggwars.armor then eggwars.clear_armor(player) end
-
-      def.player[name].alive = false
-      def.alive = def.alive - 1
+			if eggwars.armor then eggwars.clear_armor(player) end
+			def.player[name].alive = false
+			def.alive = def.alive - 1
 
 			eggwars.clear_inventory(player)
 
@@ -978,44 +975,41 @@ minetest.register_on_dieplayer(function(player, reason)
 			update_hud(key, def.player[name].id)
 
 			-- Are we down to 1 player alive yet?
-      if def.alive == 1 then
+			if def.alive == 1 then
 				def.player[killer].win = true
-
-        eggwars.end_match(key)
-
-      end
-    else
-      -- Clean inventory & announce
-      eggwars.clear_inventory(player)
-      minetest.chat_send_all("*** " ..
-        name.." paid Hades a visit and was revived by their egg.")
-    end
-  end
+				eggwars.end_match(key)
+			end
+		else
+			-- Clean inventory & announce
+			eggwars.clear_inventory(player)
+			minetest.chat_send_all("*** " ..
+			name.." paid Hades a visit and was revived by their egg.")
+		end
+	end
 end)
 
 minetest.register_on_respawnplayer(function(player)
-  local name = player:get_player_name()
-  local pos = lobby.pos -- initialise with lobby vector
-  -- match override
-  if eggwars.player[name] then
-		local key = eggwars.player[name]
+	local name = player:get_player_name()
+	local pos = lobby.pos -- initialise with lobby vector
+	-- match override
+	if eggwars.player[name] then
+	local key = eggwars.player[name]
     pos = eggwars.match[key].player[name].spawn
   end
 	player:set_pos(safe_spawn(pos))
 	return true
 	-- Wait for respawn before moving
-  --minetest.after(0.1, function () player:set_pos(pos) end)
+	--minetest.after(0.1, function () player:set_pos(pos) end)
 end)
 
 minetest.register_on_joinplayer(function(player)
-  -- handle the player - no items or interact in the hub
-  if eggwars.armor then eggwars.clear_armor(player) end
-  eggwars.clear_inventory(player)
+	-- handle the player - no items or interact in the hub
+	if eggwars.armor then eggwars.clear_armor(player) end
+	eggwars.clear_inventory(player)
 	local name = player:get_player_name()
-  minetest.set_player_privs(name, {shout=true}) --
-  player:set_pos(lobby.pos)
+	minetest.set_player_privs(name, {shout=true}) --
+	player:set_pos(lobby.pos)
 	add_hud_image(player, 'eggwars_welcome.png', 10)
-	tmp_hud[name] = {}
 end)
 
 minetest.register_on_leaveplayer(function(player)
@@ -1033,17 +1027,17 @@ end)
 
 minetest.register_on_chat_message(function(name, message)
 	-- Let's colour the chat!
-  local txt = "<" .. name .. "> " .. message
-  if eggwars.player[name] then
+	local txt = "<" .. name .. "> " .. message
+	if eggwars.player[name] then
 		local key = eggwars.player[name]
 		local def = eggwars.match[key]
-    txt = eggwars.colorize(def.player[name].color, message)
-    eggwars.chat_send_match(key, txt)
-  else
-    -- player in lobby
-    minetest.chat_send_all(txt) -- broadcast
-  end
-  return true -- return as handled!
+    	txt = eggwars.colorize(def.player[name].color, message)
+    	eggwars.chat_send_match(key, txt)
+	else
+		-- player in lobby
+		minetest.chat_send_all(txt) -- broadcast
+	end
+	return true -- return as handled!
 end)
 
 minetest.register_on_player_hpchange(function(player, hp_change, reason)
@@ -1204,21 +1198,22 @@ minetest.register_chatcommand("r", {
 	description = "Join match",
 	func = function(name, param)
 		if #registered_players < 8 then -- max 8 players in a match
-	    if #eggwars.match < 8 then -- max 8 matches on the server
-        for i, v in ipairs(registered_players) do
-          if registered_players[v] == name then
-            return true, "You have already registered"
-          end
-        end
+	    	if #eggwars.match < 8 then -- max 8 matches on the server
+				for i, v in ipairs(registered_players) do
+				  if registered_players[v] == name then
+					return true, "You have already registered"
+				  end
+				end
 				eggwars.remove_hud_image(name)
-        registered_players[#registered_players+1] = name;
-	      if #registered_players == 8 then
-	        eggwars.begin_match();
-	      else
+				registered_players[#registered_players+1] = name
+		
+				if #registered_players == 8 then
+					eggwars.begin_match();
+				else
 					minetest.chat_send_all(#registered_players ..
 						"/8 players have registered! Use /register to join.");
 				end
-	    else
+			else
 				return true, "Sorry the max number of games are running." ..
 				"Please use /start once a match finishes."
 			end
@@ -1232,7 +1227,7 @@ minetest.register_chatcommand("r", {
 -- start match
 minetest.register_chatcommand("s", {
 	params = "",
-	description = "Starts match if min match players has been reached",
+	description = "Starts match if min match players is satisfied",
 	func = function(name, param)
     if #registered_players >= min_match_players or name == owner then
       eggwars.begin_match()
@@ -1245,14 +1240,14 @@ minetest.register_chatcommand("q", {
 	params = "",
 	description = "Quit the match you are playing",
 	func = function(name, param)
-    if #registered_players > 0 then
+    	if #registered_players > 0 then
 			for i, v in ipairs(registered_players) do
 				if registered_players[v] == name then
 					registered_players[v] = nil
 					return true, "match quit!"
 				end
 			end
-    end
+    	end
 		if eggwars.player[name] then
 			local key, match, player, count
 			key = eggwars.player[name]
