@@ -8,6 +8,13 @@
 -- instances for a max of 64 players                                --
 ----------------------------------------------------------------------
 
+--- Displays message for items that cannot be dropped
+-- @return nothing
+eggwars.drop_msg = function(itemstack, player)
+	local name = player:get_player_name()
+	minetest.chat_send_player(name, "Don't be silly, you can't drop that!")
+end
+
 ------------------------
 -- on_timer functions --
 ------------------------

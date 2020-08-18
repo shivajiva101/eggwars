@@ -467,13 +467,6 @@ end
 -- API Functions --
 -------------------
 
---- Displays message for items that cannot be dropped
--- @return nothing
-eggwars.drop_msg = function(itemstack, player)
-	local name = player:get_player_name()
-	minetest.chat_send_player(name, "Don't be silly, you can't drop that!")
-end
-
 --- Reset arena by index
 -- @param arena integer index of registered arena
 -- @param n integer index of arena instance
@@ -911,7 +904,7 @@ end
 -- @param msg - string to colour
 -- @return a minetest colorized string
 eggwars.colorize = function(rgb, msg)
-	
+
 	local red = string.format('%x', rgb.r)
 	local green = string.format('%x', rgb.g)
 	local blue = string.format('%x', rgb.b)
@@ -1206,7 +1199,7 @@ minetest.register_chatcommand("r", {
 				end
 				eggwars.remove_hud_image(name)
 				registered_players[#registered_players+1] = name
-		
+
 				if #registered_players == 8 then
 					eggwars.begin_match();
 				else
