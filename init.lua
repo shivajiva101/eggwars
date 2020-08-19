@@ -70,7 +70,6 @@ dofile(MP .. "/tools.lua")
 --- Sets server conf settings
 -- @return nothing
 local function set_settings()
-	minetest.settings:set_bool('unlimited_player_transfer_distance', false)
 	minetest.settings:set('player_transfer_distance', 20)
 	minetest.settings:set('time_speed', 0)
 	minetest.settings:write()
@@ -244,22 +243,6 @@ local function remove_match_hud(key)
 		end
 		obj:hud_remove(def.remaining)
 		obj:hud_remove(def.pil)
-	end
-end
-
---- Update match status flag in players HUD
--- @param key - arena key string
--- @param id - hud element id
--- @return nothing
-local function update_hud(key, id)
-	for k, def in pairs(eggwars.match[key].player) do
-		local obj = minetest.get_player_by_name(k)
-		if not id then
-			obj:hud_change(def.remaining, 'text', 'Remaining: ' ..
-				eggwars.match[key].hud_time .. 'm')
-		else
-			obj:hud_change(def.hud_id[id], 'text', def.hud_img[2])
-		end
 	end
 end
 
@@ -452,6 +435,10 @@ local function safe_spawn(minp)
 	return minp
 end
 
+-------------------
+-- API Functions --
+-------------------
+
 --- Removes a player hud image if its registered
 -- @param name - players name
 -- @return nothing
@@ -463,9 +450,21 @@ eggwars.remove_hud_image = function(name)
 	end
 end
 
--------------------
--- API Functions --
--------------------
+--- Update match status flag in players HUD
+-- @param key - arena key string
+-- @param id - hud element id
+-- @return nothing
+eggwars.update_hud = function(key, id)
+	for k, def in pairs(eggwars.match[key].player) do
+		local obj = minetest.get_player_by_name(k)
+		if not id then
+			obj:hud_change(def.remaining, 'text', 'Remaining: ' ..
+				eggwars.match[key].hud_time .. 'm')
+		else
+			obj:hud_change(def.hud_id[id], 'text', def.hud_img[2])
+		end
+	end
+end
 
 --- Reset arena by index
 -- @param arena integer index of registered arena
