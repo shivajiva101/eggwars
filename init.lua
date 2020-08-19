@@ -440,16 +440,16 @@ end
 -- @return nothing
 local function safe_spawn(minp)
 	local maxp = vector.new(minp.x, minp.y + 30, minp.z)
-	minp.y = minp.y + 1
 	local pos = minetest.find_nodes_in_area(minp, maxp, 'air')
 	local res = minp
 	for i,v in ipairs(pos) do
-		if res.y == v.y - 1 then
+		if i > 1 and res.y == v.y - 1 then
 			return res -- 2 vertical air nodes
 		else
 			res = v
 		end
 	end
+	return minp
 end
 
 --- Removes a player hud image if its registered
