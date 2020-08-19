@@ -82,12 +82,16 @@ for i,v in ipairs(eggwars.arena[1].cs) do
 			eggs = match.player[attacker].eggs + 1
 			match.player[attacker].eggs = eggs
 			msg = victim .. "'s egg was destroyed by " .. attacker
-			eggwars.chat_send_match(eggwars.player[victim].match, msg)
+			eggwars.chat_send_match(key, msg)
+			eggwars.update_hud(key, match.player[victim].id)
+			eggwars.match[key] = match
 		end,
 		can_dig = function(pos, player)
 			local meta = minetest.get_meta(pos)
 			local name = meta:get_string("owner")
-			if name == "" or not name == player:get_player_name() then
+			if name == player:get_player_name() then
+				return false
+			else
 				return true
 			end
 		end
