@@ -321,7 +321,7 @@ local function match_timer()
 						to_player = k,
 						gain = 1.0,
 					})
-					update_hud(key, v.hud_id)
+					eggwars.update_hud(key, v.hud_id)
 				end
 				minetest.sound_play("eggwars_sudden", {
 					to_player = k,
@@ -414,7 +414,7 @@ end
 local function update_hud_time()
 	for key, match in pairs(eggwars.match) do
 		match.hud_time = match.hud_time - 1
-		update_hud(key)
+		eggwars.update_hud(key)
 	end
 	minetest.after(60, update_hud_time)
 end
@@ -964,7 +964,7 @@ minetest.register_on_dieplayer(function(player, reason)
 
 			eggwars.match[key] = def
 
-			update_hud(key, def.player[name].id)
+			eggwars.update_hud(key, def.player[name].id)
 
 			-- Are we down to 1 player alive yet?
 			if def.alive == 1 then
