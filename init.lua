@@ -321,7 +321,7 @@ local function match_timer()
 						to_player = k,
 						gain = 1.0,
 					})
-					eggwars.update_hud(key, v.hud_id)
+					eggwars.update_hud(key, v.id)
 				end
 				minetest.sound_play("eggwars_sudden", {
 					to_player = k,
