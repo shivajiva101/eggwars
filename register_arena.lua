@@ -159,9 +159,9 @@ local default_arena = {
 		-- satellites
     ruby = {
 			{x=65, y=0.5, z=0}, -- relative to arena origin
-			{x=0, y=0, z=65},
-			{x=-65, y=0, z=0},
-			{x=0, y=0, z=-65},
+			{x=0, y=0.5, z=65},
+			{x=-65, y=0.5, z=0},
+			{x=0, y=0.5, z=-65},
 			rate = 15
 		},
   },
