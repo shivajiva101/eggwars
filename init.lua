@@ -192,12 +192,12 @@ local function gen_match_hud(key)
 	local match = eggwars.match[key]
 	local pos = - (0.5 * (#match.player * 20) - 2)
 	local result = {}
-	for k, def in pairs(match.player) do
+	for k, def in pairs(match.hud_img) do
 		local ndef = {
 			hud_elem_type = 'image',
 			position = {x=0.5, y=1},
 			scale = {x=1, y=1},
-			text = def.hud_img[1],
+			text = def[1],
 			alignment = {x=0, y=0}, -- table reqd
 			offset = {x=pos, y=-100}
 		}
@@ -210,7 +210,7 @@ local function gen_match_hud(key)
 		for i, v in ipairs(result) do
 			def.hud_id[i] = player:hud_add(v)
 		end
-		-- Add Pil
+		-- Add background image
 		def.pil = player:hud_add({
 			hud_elem_type = 'image',
 			position = {x=0, y=1},
@@ -455,13 +455,14 @@ end
 -- @param id - hud element id
 -- @return nothing
 eggwars.update_hud = function(key, id)
-	for k, def in pairs(eggwars.match[key].player) do
+	local match = eggwars.match[key]
+	for k, def in pairs(match.player) do
 		local obj = minetest.get_player_by_name(k)
 		if not id then
 			obj:hud_change(def.remaining, 'text', 'Remaining: ' ..
 				eggwars.match[key].hud_time .. 'm')
 		else
-			obj:hud_change(def.hud_id[id], 'text', def.hud_img[2])
+			obj:hud_change(def.hud_id[id], 'text', match.hud_img[id][2])
 		end
 	end
 end
@@ -547,6 +548,7 @@ eggwars.begin_match = function ()
 	-- A match consists of an instance of a registered arena between 4-8 players
 	-- match.alive - players alive count
 	-- match.arena - registered arena index
+	-- match.hud_img - egg images table
 	-- match.hud_time - remaining time in minutes
 	-- match.id - arena instance index
 	-- match.player[name]
@@ -558,7 +560,6 @@ eggwars.begin_match = function ()
 	--		eggs = eggs destroyed count
 	--		falls = fall count
 	--		hud_id = hud element ref
-	--		hud_img = image filename
 	--		id = integer - player index in the instance
 	--		kills = kill count
 	--		rate = gold spawner rate in seconds
@@ -629,6 +630,7 @@ eggwars.begin_match = function ()
 	match.player = {}
 	match.spawners = {}
 	match.uid = uid
+	match.hud_img = {}
 
 	for id, name in ipairs(registered_players) do
 
@@ -643,6 +645,7 @@ eggwars.begin_match = function ()
 		hud_img = {}
 		hud_img[1] = ('eggwars_%s.png'):format(def.cs[id][3])
 		hud_img[2] = ('eggwars_out_%s.png'):format(def.cs[id][3])
+		table.insert(match.hud_img, hud_img)
 
 		match.player[name] = {}
 		match.player[name].alive = true
@@ -651,7 +654,6 @@ eggwars.begin_match = function ()
 		match.player[name].egg = true
 		match.player[name].eggs = 0
 		match.player[name].falls = 0
-		match.player[name].hud_img = hud_img
 		match.player[name].hud_id = {}
 		match.player[name].id = id
 		match.player[name].kills = 0
@@ -773,6 +775,7 @@ eggwars.end_match = function(key)
 	local windex
 
 	remove_match_hud(key)
+	eggwars.match[key].uid = 0
 
 	for _, pos in ipairs(def.spawners) do
 		minetest.get_node_timer(pos):stop()
