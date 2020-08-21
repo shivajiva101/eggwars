@@ -323,8 +323,6 @@ function eggwars.clear_nodes(pos1, pos2)
 	keep_loaded(pos1, pos2)
 
 	-- Offset positions to include full nodes (positions are in the center of nodes)
-	local p1 = vector.new(pos1.x - 0.5, pos1.y - 0.5, pos1.z - 0.5)
-	local p2 = vector.new(pos2.x + 0.5, pos2.y + 0.5, pos2.z + 0.5)
 	local nodenames = {
 		"group:choppy",
 		"group:cracky",
