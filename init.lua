@@ -52,7 +52,6 @@ local schempath = MP.."/schems/"
 local stats = minetest.deserialize(mod_data:get_string('STATS')) or {}
 local last_state = minetest.deserialize(mod_data:get_string('LSTATE')) or {}
 local tmp_tbl, tmp_hud = {}, {}
-local timer = 0
 local r_rate = 5
 
 stats.rankings = stats.rankings or {}
@@ -84,16 +83,6 @@ local function clean(pos1, pos2)
 	eggwars.clear_nodes(pos1, pos2)
 	eggwars.fixlight(pos1, pos2)
 	eggwars.clear_objects(pos1, pos2)
-end
-
---- Remove objects and replace region with air
--- @param pos - vector table
--- @param region - vector pair table
--- @return nothing
-local function clear(pos, region)
-	local p1 = vector.add(pos, region.p1)
-	local p2 = vector.add(pos, region.p2)
-	clean(p1, p2)
 end
 
 --- Save persistant data
@@ -261,8 +250,8 @@ local function add_hud_image(player, image_string, timer)
 		alignment = {x=0, y=0}, -- table reqd
 		offset = {x=0, y=0}
 	})
-	minetest.after(timer, function(name)
-		eggwars.remove_hud_image(name)
+	minetest.after(timer, function(player_name)
+		eggwars.remove_hud_image(player_name)
 	end, name)
 end
 
@@ -568,14 +557,14 @@ eggwars.begin_match = function ()
 	--		spawner = pos of gold spawner
 	--		trader = entity obj
 	--
-  	-- match.spawners - diamond and ruby spawner positions
+	-- match.spawners - diamond and ruby spawner positions
 	-- match.stats - match statistics
 	-- match.tmr - match timer
 	-- match.uid - match id
 
 
 	local match = {}
- 	local n = next_index() -- arena pos index
+	local n = next_index() -- arena pos index
 	local pos = arena_pos[n] -- base vector
 	local arena, def, rnd_list, key, spwnr, adj, hud_img, uid
 
@@ -599,15 +588,15 @@ eggwars.begin_match = function ()
 	if #last_state > 0 then
 		for i,v in ipairs(last_state) do
 			if vector.equals(pos, v.pos) then
-				for _, pos in ipairs(v.spawners) do
-					minetest.get_node_timer(pos):stop()
-					local w = minetest.get_objects_inside_radius(pos, 2)
+				for _, position in ipairs(v.spawners) do
+					minetest.get_node_timer(position):stop()
+					local w = minetest.get_objects_inside_radius(position, 2)
 					for _, object in ipairs(w) do
 						if not object:is_player() then
 							object:remove()
 						end
 					end
-					minetest.remove_node(pos)
+					minetest.remove_node(position)
 				end
 				last_state[i] = nil
 			end
@@ -621,7 +610,7 @@ eggwars.begin_match = function ()
 	}
 
 	def = eggwars.arena[arena]
-  	rnd_list = gen_trader_order()
+	rnd_list = gen_trader_order()
 	key = 'm' .. n
 
 	match.alive = #registered_players
@@ -694,7 +683,7 @@ eggwars.begin_match = function ()
 
 		-- Add trader
 		local trader_name = 'Trader '.. def.trader.names[rnd_list[id]]
-		local staticdata = minetest.serialize({owner = name, nametag = trader_name, uid = uid})
+		staticdata = minetest.serialize({owner = name, nametag = trader_name, uid = uid})
 		adj = vector.add(sp, def.trader.offset[id])
 		obj = minetest.add_entity(adj, 'eggwars:trader', staticdata)
 		yaw = ((math.pi * def.trader.yaw[id])/180)
@@ -731,7 +720,7 @@ eggwars.begin_match = function ()
 	for idx, v in ipairs(def.spawners.diamond) do
 		adj = vector.add(pos, v)
 		minetest.set_node(adj, {name='eggwars:diamond_spawner'})
-	 	minetest.get_node_timer(adj):start(spwnr)
+		minetest.get_node_timer(adj):start(spwnr)
 		table.insert(match.spawners, adj)
 		table.insert(state.spawners, adj)
 	end
@@ -853,7 +842,7 @@ eggwars.end_match = function(key)
 					)
 					add_hud_image(player, 'eggwars_winner.png', 5)
 					minetest.sound_play("eggwars_winner", {
-						to_player = killer,
+						to_player = name,
 						gain = 0.5
 					})
 				end
@@ -944,7 +933,7 @@ minetest.register_on_dieplayer(function(player, reason)
 				minetest.colorize('red','OUT'))
 
 			-- set privs for spectating
-      		minetest.set_player_privs(name, {fly=true,fast=true,shout=true})
+			minetest.set_player_privs(name, {fly=true,fast=true,shout=true})
 			add_hud_image(player, 'eggwars_out.png', 5)
 
 			-- record the kill
@@ -1026,8 +1015,8 @@ minetest.register_on_chat_message(function(name, message)
 	if eggwars.player[name] then
 		local key = eggwars.player[name]
 		local def = eggwars.match[key]
-    	txt = eggwars.colorize(def.player[name].color, message)
-    	eggwars.chat_send_match(key, txt)
+		txt = eggwars.colorize(def.player[name].color, message)
+		eggwars.chat_send_match(key, txt)
 	else
 		-- player in lobby
 		minetest.chat_send_all(txt) -- broadcast
@@ -1063,7 +1052,8 @@ minetest.register_chatcommand('admin', {
 			return false, "Insufficient privs!"
 		end
 
-		local cmd, fn, pos1, pos2, helper, list, param2, player
+		local pos1 = 0
+		local cmd, fn, pos2, helper, list, player
 
 		helper = [[Usage:
 		/admin load <filename>
@@ -1096,7 +1086,7 @@ minetest.register_chatcommand('admin', {
 
 			local path, folder, file, err, msg
 			msg = {}
-			for i, v in ipairs(folders) do
+			for _, v in ipairs(folders) do
 
 				local check = check_files(v, fn)
 
@@ -1193,7 +1183,7 @@ minetest.register_chatcommand("r", {
 	description = "Join match",
 	func = function(name, param)
 		if #registered_players < 8 then -- max 8 players in a match
-	    	if #eggwars.match < 8 then -- max 8 matches on the server
+			if #eggwars.match < 8 then -- max 8 matches on the server
 				for i, v in ipairs(registered_players) do
 				  if registered_players[v] == name then
 					return true, "You have already registered"
@@ -1234,15 +1224,15 @@ minetest.register_chatcommand("s", {
 minetest.register_chatcommand("q", {
 	params = "",
 	description = "Quit the match you are playing",
-	func = function(name, param)
-    	if #registered_players > 0 then
+	func = function(name, _)
+		if #registered_players > 0 then
 			for i, v in ipairs(registered_players) do
 				if registered_players[v] == name then
 					registered_players[v] = nil
 					return true, "match quit!"
 				end
 			end
-    	end
+		end
 		if eggwars.player[name] then
 			local key, match, player, count
 			key = eggwars.player[name]
