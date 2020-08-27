@@ -1,12 +1,14 @@
 ----------------------------------------------------------------------
--- Eggwars by wilkgr																								--
--- with additional code by shivajiva101@hotmail.com		              --
+-- Eggwars by wilkgr												--
+-- with additional code by shivajiva101@hotmail.com		            --
 -- Licensed under the AGPL v3                                       --
 -- You MUST make any changes you make open source                   --
 -- even if you just run it on your server without publishing it     --
 -- Supports a maximum of 8 players per instance and 8 concurrent    --
 -- instances for a max of 64 players                                --
 ----------------------------------------------------------------------
+
+eggwars = eggwars
 
 --- Displays message for items that cannot be dropped
 -- @return nothing
@@ -51,7 +53,7 @@ minetest.register_craftitem("eggwars:ruby", {
 ------------------------
 
 -- Arena eggs
-for i,v in ipairs(eggwars.arena[1].cs) do
+for i, v in ipairs(eggwars.arena[1].cs) do
 
 	minetest.register_node("eggwars:egg" .. i, {
 		description = eggwars.arena[1].cs[i][1] .. " egg",
@@ -75,7 +77,6 @@ for i,v in ipairs(eggwars.arena[1].cs) do
 			local victim, attacker, msg, key, match, eggs
 			victim = oldmetadata.fields.owner
 			attacker = digger:get_player_name()
-			if not victim then return end -- dev ONLY!
 			key = eggwars.player[victim]
 			match = eggwars.match[key]
 			match.player[victim].egg = false
@@ -89,7 +90,8 @@ for i,v in ipairs(eggwars.arena[1].cs) do
 		can_dig = function(pos, player)
 			local meta = minetest.get_meta(pos)
 			local name = meta:get_string("owner")
-			if name == player:get_player_name() then
+			local pname = player:get_player_name()
+			if name == pname then
 				return false
 			else
 				return true
@@ -103,18 +105,21 @@ end
 minetest.register_node("eggwars:gold_spawner", {
 	description = "Gold ingot spawner",
 	tiles = {"default_stone.png^default_mineral_gold.png"},
+	groups = {unbreakable = 1, not_in_creative_inventory = 1},
 	on_timer = goldspawner
 })
 
 minetest.register_node("eggwars:ruby_spawner", {
 	description = "Ruby gemstone spawner",
 	tiles = {"default_stone.png^eggwars_mineral_ruby.png"},
+	groups = {unbreakable = 1, not_in_creative_inventory = 1},
 	on_timer = rubyspawner
 })
 
 minetest.register_node("eggwars:diamond_spawner", {
 	description = "Diamond gemstone spawner",
 	tiles = {"default_stone.png^default_mineral_diamond.png"},
+	groups = {unbreakable = 1, not_in_creative_inventory = 1},
 	on_timer = diamondspawner
 })
 
