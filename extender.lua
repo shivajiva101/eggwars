@@ -18,8 +18,8 @@ local jit_available = jit ~= nil
 -- `pos1` is less than or equal to the corresponding component of `pos2`.
 -- @return the new positions.
 local function sort_pos(pos1, pos2)
-	pos1 = {x=pos1.x, y=pos1.y, z=pos1.z}
-	pos2 = {x=pos2.x, y=pos2.y, z=pos2.z}
+	pos1 = {x = pos1.x, y = pos1.y, z = pos1.z}
+	pos2 = {x = pos2.x, y = pos2.y, z = pos2.z}
 	if pos1.x > pos2.x then
 		pos2.x, pos1.x = pos1.x, pos2.x
 	end
@@ -67,33 +67,35 @@ local function load_schematic(value)
 			-- This is broken for larger tables in the current version of LuaJIT
 			nodes = minetest.deserialize(content)
 		else
-			-- XXX: This is a filthy hack that works surprisingly well - in LuaJIT, `minetest.deserialize` will fail due to the register limit
+			-- XXX: This is a filthy hack that works surprisingly well - in LuaJIT,
+			-- `minetest.deserialize` will fail due to the register limit
 			content = content:gsub("return%s*{", "", 1):gsub("}%s*$", "", 1) -- remove the starting and ending values to leave only the node data
-			local escaped = content:gsub("\\\\", "@@"):gsub("\\\"", "@@"):gsub("(\"[^\"]*\")", function(s) return string.rep("@", #s) end)
-			local startpos, startpos1, endpos = 1, 1
-			while true do -- go through each individual node entry (except the last)
-				startpos, endpos = escaped:find("},%s*{", startpos)
-				if not startpos then
-					break
+			local escaped = content:gsub("\\\\", "@@"):gsub(
+				"\\\"", "@@"):gsub("(\"[^\"] * \")", function(s) return string.rep("@", #s) end)
+				local startpos, startpos1, endpos = 1, 1
+				while true do -- go through each individual node entry (except the last)
+					startpos, endpos = escaped:find("},%s*{", startpos)
+					if not startpos then
+						break
+					end
+					local current = content:sub(startpos1, startpos)
+					local entry = minetest.deserialize("return " .. current)
+					table.insert(nodes, entry)
+					startpos, startpos1 = endpos, endpos
 				end
-				local current = content:sub(startpos1, startpos)
-				local entry = minetest.deserialize("return " .. current)
+				local entry = minetest.deserialize("return " .. content:sub(startpos1)) -- process the last entry
 				table.insert(nodes, entry)
-				startpos, startpos1 = endpos, endpos
 			end
-			local entry = minetest.deserialize("return " .. content:sub(startpos1)) -- process the last entry
-			table.insert(nodes, entry)
+		else
+			return nil
 		end
-	else
-		return nil
-	end
-	return nodes
+		return nodes
 end
 
 local function allocate_with_nodes(origin_pos, nodes)
 	local huge = math.huge
 	local pos1x, pos1y, pos1z = huge, huge, huge
-	local pos2x, pos2y, pos2z = -huge, -huge, -huge
+	local pos2x, pos2y, pos2z = -huge, - huge, - huge
 	local origin_x, origin_y, origin_z = origin_pos.x, origin_pos.y, origin_pos.z
 	for i, entry in ipairs(nodes) do
 		local x, y, z = origin_x + entry.x, origin_y + entry.y, origin_z + entry.z
@@ -104,8 +106,8 @@ local function allocate_with_nodes(origin_pos, nodes)
 		if y > pos2y then pos2y = y end
 		if z > pos2z then pos2z = z end
 	end
-	local pos1 = {x=pos1x, y=pos1y, z=pos1z}
-	local pos2 = {x=pos2x, y=pos2y, z=pos2z}
+	local pos1 = {x = pos1x, y = pos1y, z = pos1z}
+	local pos2 = {x = pos2x, y = pos2y, z = pos2z}
 	return pos1, pos2, #nodes
 end
 
@@ -116,8 +118,8 @@ end
 local function volume(pos1, pos2)
 	local p1, p2 = sort_pos(pos1, pos2)
 	return (p2.x - p1.x + 1) *
-		(p2.y - p1.y + 1) *
-		(p2.z - p1.z + 1)
+	(p2.y - p1.y + 1) *
+	(p2.z - p1.z + 1)
 end
 
 --- Slice a region along the midpoint of an axis
@@ -190,7 +192,7 @@ end
 local function init(pos1, pos2)
 	local manip = minetest.get_voxel_manip()
 	local emerged_pos1, emerged_pos2 = manip:read_from_map(pos1, pos2)
-	local area = VoxelArea:new({MinEdge=emerged_pos1, MaxEdge=emerged_pos2})
+	local area = VoxelArea:new({MinEdge = emerged_pos1, MaxEdge = emerged_pos2})
 	return manip, area
 end
 
@@ -214,22 +216,22 @@ local function shield(pos, vol, remove)
 		node_2 = minetest.get_content_id("eggwars:kill")
 		msg = "Warning: Area now shielded"
 	end
-	local stride = {x=1, y=area.ystride, z=area.zstride}
+	local stride = {x = 1, y = area.ystride, z = area.zstride}
 	local offset = vector.subtract(pos, area.MinEdge)
 	local count = 0
 
 	-- add the nodes
-	for z = 0, vol.z-1 do
+	for z = 0, vol.z - 1 do
 		local index_z = (offset.z + z) * stride.z + 1
-		for y = 0, vol.y-1 do
+		for y = 0, vol.y - 1 do
 			local index_y = index_z + (offset.y + y) * stride.y
-			for x = 0, vol.x-1 do
-				local is_clip = z == 0 or z == vol.z-1
-					or y == 0 or y == vol.y-1
-					or x == 0 or x == vol.x-1
-				local is_kill = z == 1 or z == vol.z-2	or z == vol.z-3
-				or y == 1 or y == 2 or y == vol.y-2 or y == vol.y-3
-				or x == 1 or x == 2 or x == vol.x-2 or x == vol.x-3
+			for x = 0, vol.x - 1 do
+				local is_clip = z == 0 or z == vol.z - 1
+				or y == 0 or y == vol.y - 1
+				or x == 0 or x == vol.x - 1
+				local is_kill = z == 1 or z == vol.z - 2 or z == vol.z - 3
+				or y == 1 or y == 2 or y == vol.y - 2 or y == vol.y - 3
+				or x == 1 or x == 2 or x == vol.x - 2 or x == vol.x - 3
 				if is_clip then
 					local i = index_y + (offset.x + x)
 					data[i] = node_1
@@ -295,17 +297,17 @@ function eggwars.clear_objects(pos1, pos2)
 	}
 	-- Bounding sphere radius
 	local radius = math.sqrt(
-			(center.x - pos1x) ^ 2 +
-			(center.y - pos1y) ^ 2 +
-			(center.z - pos1z) ^ 2)
+		(center.x - pos1x) ^ 2 +
+		(center.y - pos1y) ^ 2 +
+	(center.z - pos1z) ^ 2)
 	local count = 0
 	for _, obj in pairs(minetest.get_objects_inside_radius(center, radius)) do
 		-- Avoid players
 		if not obj:is_player() then
 			local pos = obj:getpos()
 			if pos.x >= pos1x and pos.x <= pos2x and
-					pos.y >= pos1y and pos.y <= pos2y and
-					pos.z >= pos1z and pos.z <= pos2z then
+			pos.y >= pos1y and pos.y <= pos2y and
+			pos.z >= pos1z and pos.z <= pos2z then
 				-- Inside region
 				obj:remove()
 				count = count + 1
@@ -331,13 +333,13 @@ function eggwars.clear_nodes(pos1, pos2)
 		"group:crumbly",
 		"group:oddly_breakable_by_hand"
 	}
-	local slices = region_slicer(pos1, pos2, 'y')
+	local slices = region_slicer(p1, p2, 'y')
 	local n = 0
 
 	for _, slice in ipairs(slices) do
 		local found = minetest.find_nodes_in_area(slice.p1, slice.p2, nodenames)
-		for _,v in ipairs(found) do
-			minetest.set_node(v, {name="air"})
+		for _, v in ipairs(found) do
+			minetest.set_node(v, {name = "air"})
 		end
 		n = n + #found
 	end
@@ -397,7 +399,7 @@ function eggwars.serialize_meta(pos1, pos2)
 	pos1, pos2 = sort_pos(pos1, pos2)
 	keep_loaded(pos1, pos2)
 
-	local pos = {x=pos1.x, y=0, z=0}
+	local pos = {x = pos1.x, y = 0, z = 0}
 	local count = 0
 	local result = {}
 	local get_node, get_meta = minetest.get_node, minetest.get_meta
@@ -479,9 +481,9 @@ eggwars.protect = function(pos1, pos2, remove)
 	}
 
 	-- unsign if reqd
-	for k,v in pairs(dims) do
+	for k, v in pairs(dims) do
 		if v < 0 then
-			dims[k] = (v*v)^0.5
+			dims[k] = (v * v)^0.5
 		end
 	end
 
@@ -510,7 +512,7 @@ if eggwars.armor then
 		if not name then
 			return
 		end
-		for i=1, armor_inv:get_size("armor") do
+		for i = 1, armor_inv:get_size("armor") do
 			local stack = armor_inv:get_stack("armor", i)
 			if stack:get_count() > 0 then
 				armor:run_callbacks("on_unequip", player, i, stack)
