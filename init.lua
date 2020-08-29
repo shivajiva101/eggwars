@@ -435,6 +435,29 @@ local function safe_spawn(minp)
 	return minp -- failed search
 end
 
+local function remove_match_player(name)
+	if eggwars.player[name] then
+		local key, match, player, count
+		key = eggwars.player[name]
+		match = eggwars.match[key]
+		player = match.player[name]
+		if player.egg then
+			minetest.remove_node(player.eggpos)
+		end
+		count = match.alive - 1
+		eggwars.match[key].alive = count
+		eggwars.match[key].player[name].alive = false
+		eggwars.match[key].player[name].egg = false
+		eggwars.player[name] = nil
+		if match.alive == 1 then
+			eggwars.end_match(key)
+		else
+			local msg = name .. " quit the match!"
+			eggwars.chat_send_match(key, msg)
+		end
+	end
+end
+
 -------------------
 -- API Functions --
 -------------------
@@ -928,130 +951,6 @@ eggwars.chat_send_match = function(key, msg)
 	end
 end
 
--------------------------------------
--- Registered callbacks   --
--------------------------------------
-
-minetest.register_on_dieplayer(function(player, reason)
-
-	local name = player:get_player_name()
-	local key = eggwars.player[name]
-	local def = eggwars.match[key]
-
-	if def then
-		if def.player[name].alive and not def.player[name].egg then
-			minetest.chat_send_all("*** "..name.." is " ..
-			minetest.colorize('red', 'OUT'))
-
-			-- set privs for spectating
-			minetest.set_player_privs(name, {fly = true, fast = true, shout = true})
-			add_hud_image(player, 'eggwars_out.png', 5)
-
-			-- record the kill
-			local killer
-			if reason.object then
-				killer = reason.object:get_player_name()
-				local upd = def.player[killer].kills + 1
-				def.player[killer].kills = upd
-			end
-
-			-- Make nametag invisible
-			player:set_nametag_attributes({color = {a = 0, r = 0, g = 0, b = 0}})
-			player:set_properties({visual_size = {x = 0, y = 0}}) --Make player invisible
-
-			if eggwars.armor then eggwars.clear_armor(player) end
-			def.player[name].alive = false
-			def.alive = def.alive - 1
-
-			eggwars.clear_inventory(player)
-
-			eggwars.match[key] = def
-
-			eggwars.update_hud(key, def.player[name].id)
-
-			-- Are we down to 1 player alive yet?
-			if def.alive == 1 then
-				def.player[killer].win = true
-				eggwars.end_match(key)
-			end
-		else
-			-- Clean inventory & announce
-			eggwars.clear_inventory(player)
-			minetest.chat_send_all("*** " ..
-			name.." paid Hades a visit and was revived by their egg.")
-		end
-	end
-end)
-
-minetest.register_on_respawnplayer(function(player)
-	local name = player:get_player_name()
-	local pos = lobby.pos -- initialise with lobby vector
-	-- match override
-	if eggwars.player[name] then
-		local key = eggwars.player[name]
-		local match = eggwars.match[key]
-		pos = match.player[name].spawn
-	end
-	player:set_pos(safe_spawn(pos))
-	return true
-	-- Wait for respawn before moving
-	--minetest.after(0.1, function () player:set_pos(pos) end)
-end)
-
-minetest.register_on_joinplayer(function(player)
-	-- handle the player - no items or interact in the hub
-	if eggwars.armor then eggwars.clear_armor(player) end
-	eggwars.clear_inventory(player)
-	local name = player:get_player_name()
-	minetest.set_player_privs(name, {shout = true}) --
-	player:set_pos(lobby.pos)
-	add_hud_image(player, 'eggwars_welcome.png', 10)
-end)
-
-minetest.register_on_leaveplayer(function(player)
-	-- Handle players exiting during a match
-	local name = player:get_player_name()
-	local key = eggwars.player[name]
-	local def = eggwars.match[key]
-	if key then
-		def.player[name].alive = false
-		def.alive = eggwars.match[def.match].alive - 1
-		eggwars.match[key] = def
-	end
-	if tmp_hud[name] then tmp_hud[name] = nil end
-end)
-
-minetest.register_on_chat_message(function(name, message)
-	-- Let's colour the chat!
-	local txt = "<" .. name .. "> " .. message
-	if eggwars.player[name] then
-		local key = eggwars.player[name]
-		local def = eggwars.match[key]
-		txt = eggwars.colorize(def.player[name].color, message)
-		eggwars.chat_send_match(key, txt)
-	else
-		-- player in lobby
-		minetest.chat_send_all(txt) -- broadcast
-	end
-	return true -- return as handled!
-end)
-
-minetest.register_on_player_hpchange(function(player, hp_change, reason)
-	if player then
-		local name = player:get_player_name()
-		local key = eggwars.player[name]
-		local match = eggwars.match[key]
-		if eggwars.player[name] and reason.object then
-			local pname = reason.object:get_player_name()
-			local damage = match.player[pname].damage + hp_change
-			eggwars.match[key].player[pname].damage = damage
-		elseif eggwars.player[name] and reason.type == 'fall' then
-			local falls = match.player[name].falls + 1
-			eggwars.match[key].player[name].falls = falls
-		end
-	end
-end, false)
-
 -----------------------------------------
 -- Registered chat commands   --
 -----------------------------------------
@@ -1239,42 +1138,19 @@ minetest.register_chatcommand("q", {
 params = "",
 description = "Quit the match you are playing",
 func = function(name, param)
+	-- queued?
 	if #registered_players > 0 then
+		local idx
 		for i, v in ipairs(registered_players) do
-			if registered_players[v] == name then
-				registered_players[v] = nil
-				return true, "match quit!"
+			if v.name == name then
+				idx = i
+				break
 			end
 		end
+		table.remove(registered_players, idx)
+		return true, "you have been removed from the queue!"
 	end
-	if eggwars.player[name] then
-		local key, match, player, count
-		key = eggwars.player[name]
-		match = eggwars.match[key]
-		player = match.player[name]
-		if player.egg then
-			minetest.remove_node(player.eggpos)
-		end
-		count = match.alive - 1
-		eggwars.match[key].alive = count
-		eggwars.match[key].player[name].alive = false
-		eggwars.match[key].player[name].egg = false
-		eggwars.player[name] = nil
-		if match.alive == 1 then
-			for k, v in pairs(eggwars.match[key].player) do
-				if v.alive then
-					v.win = true
-					minetest.chat_send_all(minetest.colorize(
-						"green", "*** " .. name .. " won their match!")
-					)
-					local obj = minetest.get_player_by_name(k)
-					eggwars.add_hud_image(obj, 'eggwars_winner.png', 5)
-					eggwars.end_match(key)
-					break
-				end
-			end
-		end
-	end
+	remove_match_player(name)
 end
 })
 
@@ -1307,6 +1183,124 @@ func = function(name, param)
 	return true, table.concat(text)
 end
 })
+
+-------------------------------------
+-- Registered callbacks   --
+-------------------------------------
+
+minetest.register_on_dieplayer(function(player, reason)
+
+	local name = player:get_player_name()
+	local key = eggwars.player[name]
+	local def = eggwars.match[key]
+
+	if def then
+		if def.player[name].alive and not def.player[name].egg then
+			minetest.chat_send_all("*** "..name.." is " ..
+			minetest.colorize('red', 'OUT'))
+
+			-- set privs for spectating
+			minetest.set_player_privs(name, {fly = true, fast = true, shout = true})
+			add_hud_image(player, 'eggwars_out.png', 5)
+
+			-- record the kill
+			local killer
+			if reason.object then
+				killer = reason.object:get_player_name()
+				local upd = def.player[killer].kills + 1
+				def.player[killer].kills = upd
+			end
+
+			-- Make nametag invisible
+			player:set_nametag_attributes({color = {a = 0, r = 0, g = 0, b = 0}})
+			player:set_properties({visual_size = {x = 0, y = 0}}) --Make player invisible
+
+			if eggwars.armor then eggwars.clear_armor(player) end
+			def.player[name].alive = false
+			def.alive = def.alive - 1
+
+			eggwars.clear_inventory(player)
+
+			eggwars.match[key] = def
+
+			eggwars.update_hud(key, def.player[name].id)
+
+			-- Are we down to 1 player alive yet?
+			if def.alive == 1 then
+				def.player[killer].win = true
+				eggwars.end_match(key)
+			end
+		else
+			-- Clean inventory & announce
+			eggwars.clear_inventory(player)
+			minetest.chat_send_all("*** " ..
+			name.." paid Hades a visit and was revived by their egg.")
+		end
+	end
+end)
+
+minetest.register_on_respawnplayer(function(player)
+	local name = player:get_player_name()
+	local pos = lobby.pos -- initialise with lobby vector
+	-- match override
+	if eggwars.player[name] then
+		local key = eggwars.player[name]
+		local match = eggwars.match[key]
+		pos = match.player[name].spawn
+	end
+	player:set_pos(safe_spawn(pos))
+	return true
+	-- Wait for respawn before moving
+	--minetest.after(0.1, function () player:set_pos(pos) end)
+end)
+
+minetest.register_on_joinplayer(function(player)
+	-- handle the player - no items or interact in the hub
+	if eggwars.armor then eggwars.clear_armor(player) end
+	eggwars.clear_inventory(player)
+	local name = player:get_player_name()
+	minetest.set_player_privs(name, {shout = true}) --
+	player:set_pos(lobby.pos)
+	add_hud_image(player, 'eggwars_welcome.png', 10)
+end)
+
+minetest.register_on_leaveplayer(function(player)
+	-- Handle players exiting during a match
+	local name = player:get_player_name()
+	remove_match_player(name)
+	if tmp_hud[name] then tmp_hud[name] = nil end
+end)
+
+minetest.register_on_chat_message(function(name, message)
+	-- Let's colour the chat!
+	local txt = "<" .. name .. "> " .. message
+	if eggwars.player[name] then
+		local key = eggwars.player[name]
+		local def = eggwars.match[key]
+		txt = eggwars.colorize(def.player[name].color, message)
+		eggwars.chat_send_match(key, txt)
+	else
+		-- player in lobby
+		minetest.chat_send_all(txt) -- broadcast
+	end
+	return true -- return as handled!
+end)
+
+minetest.register_on_player_hpchange(function(player, hp_change, reason)
+	if player then
+		local name = player:get_player_name()
+		local key = eggwars.player[name]
+		local match = eggwars.match[key]
+		if eggwars.player[name] and reason.object then
+			local pname = reason.object:get_player_name()
+			local damage = match.player[pname].damage + hp_change
+			eggwars.match[key].player[pname].damage = damage
+		elseif eggwars.player[name] and reason.type == 'fall' then
+			local falls = match.player[name].falls + 1
+			eggwars.match[key].player[name].falls = falls
+		end
+	end
+end, false)
 
 -- run functions after all mods are loaded!
 minetest.after(0, modify_game)
