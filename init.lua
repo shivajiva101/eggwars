@@ -1,6 +1,6 @@
 ----------------------------------------------------------------------
--- Eggwars by wilkgr																								--
--- with additional code by shivajiva101@hotmail.com		              --
+-- Eggwars by wilkgr												--
+-- with additional code by shivajiva101@hotmail.com		            --
 -- Licensed under the AGPL v3                                       --
 -- You MUST make any changes you make open source                   --
 -- even if you just run it on your server without publishing it     --
@@ -232,26 +232,37 @@ local function gen_match_hud(key)
 	end
 end
 
+--- Remove player hud match elements
+-- @param name - players name string
+-- @param key - match key string
+-- @return nothing
+local function remove_player_hud(name)
+	local obj = minetest.get_player_by_name(name)
+	if not obj then return end
+	local key = eggwars.player[name]
+	local def = eggwars.match[key].player[name]
+	for _, v in ipairs(def.hud_id) do
+		obj:hud_remove(v)
+	end
+	obj:hud_remove(def.remaining)
+	obj:hud_remove(def.pil)
+end
+
 --- Remove match status flags from players HUD
 -- @param key - arena key string
 -- @return nothing
 local function remove_match_hud(key)
-	for k, def in pairs(eggwars.match[key].player) do
-		local obj = minetest.get_player_by_name(k)
-		for _, v in ipairs(def.hud_id) do
-			obj:hud_remove(v)
-		end
-		obj:hud_remove(def.remaining)
-		obj:hud_remove(def.pil)
+	for k, _ in pairs(eggwars.match[key].player) do
+		remove_player_hud(k)
 	end
 end
 
---- Add an image that removes itself to a players HUD
+--- Add an image to a players HUD that removes itself
 -- @param player - object
 -- @param image_string - filename of image
 -- @param timer - time in seconds it displays
 -- @return nothing
-local function add_hud_image(player, image_string, timer)
+local function add_tmp_image(player, image_string, timer)
 	local name = player:get_player_name()
 	tmp_hud[name] = player:hud_add({
 		hud_elem_type = 'image',
@@ -262,7 +273,7 @@ local function add_hud_image(player, image_string, timer)
 		offset = {x = 0, y = 0}
 	})
 	minetest.after(timer, function(pname)
-		eggwars.remove_hud_image(pname)
+		eggwars.remove_tmp_image(pname)
 	end, name)
 end
 
@@ -327,7 +338,7 @@ local function match_timer()
 					to_player = k,
 					gain = 1.0,
 				})
-				add_hud_image(
+				add_tmp_image(
 					minetest.get_player_by_name(k),
 					'eggwars_suddendeath.png', 5
 				)
@@ -339,7 +350,7 @@ local function match_timer()
 					to_player = k,
 					gain = 1.0,
 				})
-				add_hud_image(
+				add_tmp_image(
 					minetest.get_player_by_name(k),
 					'eggwars_timeover.png', 5
 				)
@@ -435,6 +446,9 @@ local function safe_spawn(minp)
 	return minp -- failed search
 end
 
+--- Removes a player from a match
+-- @param name - player name strings
+-- @return nothing
 local function remove_match_player(name)
 	if eggwars.player[name] then
 		local key, match, player, count
@@ -444,10 +458,12 @@ local function remove_match_player(name)
 		if player.egg then
 			minetest.remove_node(player.eggpos)
 		end
+		remove_player_hud(name)
 		count = match.alive - 1
-		eggwars.match[key].alive = count
-		eggwars.match[key].player[name].alive = false
-		eggwars.match[key].player[name].egg = false
+		match.alive = count
+		match.player[name].alive = false
+		match.player[name].egg = false
+		eggwars.match[key] = match
 		eggwars.player[name] = nil
 		if match.alive == 1 then
 			eggwars.end_match(key)
@@ -465,7 +481,7 @@ end
 --- Removes a temp player hud image
 -- @param name - players name
 -- @return nothing
-eggwars.remove_hud_image = function(name)
+eggwars.remove_tmp_image = function(name)
 	if tmp_hud[name] then
 		local player = minetest.get_player_by_name(name)
 		player:hud_remove(tmp_hud[name])
@@ -874,7 +890,7 @@ eggwars.end_match = function(key)
 					minetest.chat_send_all(minetest.colorize(
 						"green", "*** " .. name .. " won their match!")
 					)
-					add_hud_image(player, 'eggwars_winner.png', 5)
+					add_tmp_image(player, 'eggwars_winner.png', 5)
 					minetest.sound_play("eggwars_winner", {
 						to_player = pdef.name,
 						gain = 0.5
@@ -1102,7 +1118,7 @@ func = function(name, param)
 					return true, "You have already registered"
 				end
 			end
-			eggwars.remove_hud_image(name)
+			eggwars.remove_tmp_image(name)
 			registered_players[#registered_players + 1] = name
 
 			if #registered_players == 8 then
@@ -1159,10 +1175,11 @@ minetest.register_chatcommand("e", {
 params = "",
 description = "End the game",
 func = function(name, param)
-	if not name == owner then return end
-	local key = eggwars.player[name]
-	if key then
-		eggwars.end_match(key)
+	if name == owner then
+		local key = eggwars.player[name]
+		if key then
+			eggwars.end_match(key)
+		end
 	end
 end
 })
@@ -1201,7 +1218,7 @@ minetest.register_on_dieplayer(function(player, reason)
 
 			-- set privs for spectating
 			minetest.set_player_privs(name, {fly = true, fast = true, shout = true})
-			add_hud_image(player, 'eggwars_out.png', 5)
+			add_tmp_image(player, 'eggwars_out.png', 5)
 
 			-- record the kill
 			local killer
@@ -1261,7 +1278,7 @@ minetest.register_on_joinplayer(function(player)
 	local name = player:get_player_name()
 	minetest.set_player_privs(name, {shout = true}) --
 	player:set_pos(lobby.pos)
-	add_hud_image(player, 'eggwars_welcome.png', 10)
+	add_tmp_image(player, 'eggwars_welcome.png', 10)
 end)
 
 minetest.register_on_leaveplayer(function(player)
@@ -1308,4 +1325,4 @@ minetest.after(0, set_settings)
 minetest.after(0, match_timer)
 minetest.after(0, update_hud_time)
 
-minetest.log('action', '[LOADED] Eggwars')
+minetest.log('action', '[LOADED] Eggwars mod')
