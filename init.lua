@@ -49,12 +49,17 @@ local MP = minetest.get_modpath("eggwars")
 local WP = minetest.get_worldpath()
 local registered_players = {} -- temp prematch buffer
 local schempath = MP.."/schems/"
-local stats = minetest.deserialize(mod_data:get_string('STATS')) or {}
-local last_state = minetest.deserialize(mod_data:get_string('LSTATE')) or {}
+local stats = minetest.deserialize(mod_data:get_string('statistics')) or {}
+local reload = mod_data:get_string('dirty') == "true"
 local tmp_tbl, tmp_hud = {}, {}
 local r_rate = 5
 
 stats.rankings = stats.rankings or {}
+
+if reload then loaded = {
+	arena = {}
+	}
+end
 
 dofile(MP .. "/register_arena.lua")
 dofile(MP.."/register_nodes.lua")
@@ -98,8 +103,8 @@ end
 --- Save persistant data
 -- @return nothing
 local function save_persistant()
-	mod_data:set_string('STATS', minetest.serialize(stats))
-	mod_data:set_string('LSTATE', minetest.serialize(last_state))
+	mod_data:set_string('statistics', minetest.serialize(stats))
+	mod_data:set_string('dirty', reload)
 	mod_data:set_string('loaded', minetest.serialize(loaded))
 end
 
@@ -468,10 +473,23 @@ local function remove_match_player(name)
 		if match.alive == 1 then
 			eggwars.end_match(key)
 		else
+			player = minetest.get_player_by_name(name)
+			player:set_pos(lobby.pos)
 			local msg = name .. " quit the match!"
 			eggwars.chat_send_match(key, msg)
 		end
 	end
+end
+
+--- Return length of a keypair table
+-- @param list - keypair table
+-- @return integer
+local function list_count(list)
+	local count = 0
+	for k, _ in pairs(list) do
+		count = count + 1
+	end
+	return count
 end
 
 -------------------
@@ -634,31 +652,6 @@ eggwars.begin_match = function ()
 		arena = loaded.arena[n].arena
 	end
 
-	-- Process crash cleanup if reqd
-	if #last_state > 0 then
-		for i, v in ipairs(last_state) do
-			if vector.equals(pos, v.pos) then
-				for _, p in ipairs(v.spawners) do
-					minetest.get_node_timer(p):stop()
-					local w = minetest.get_objects_inside_radius(p, 2)
-					for _, object in ipairs(w) do
-						if not object:is_player() then
-							object:remove()
-						end
-					end
-					minetest.remove_node(pos)
-				end
-				last_state[i] = nil
-			end
-		end
-	end
-
-	-- Create state
-	local state = {
-		pos = pos,
-		spawners = {}
-	}
-
 	def = eggwars.arena[arena]
 	rnd_list = gen_trader_order()
 	key = 'm' .. n
@@ -712,7 +705,6 @@ eggwars.begin_match = function ()
 		minetest.set_node(adj, {name = 'eggwars:gold_spawner'})
 		minetest.get_node_timer(adj):start(spwnr)
 		match.player[name].spawner = adj
-		table.insert(state.spawners, adj)
 
 		-- Add spawner bot
 		adj = vector.add(sp, def.bot.offset[id])
@@ -772,7 +764,6 @@ eggwars.begin_match = function ()
 		minetest.set_node(adj, {name = 'eggwars:diamond_spawner'})
 		minetest.get_node_timer(adj):start(spwnr)
 		table.insert(match.spawners, adj)
-		table.insert(state.spawners, adj)
 	end
 
 	-- Ruby spawners
@@ -782,7 +773,6 @@ eggwars.begin_match = function ()
 		minetest.set_node(adj, {name = 'eggwars:ruby_spawner'})
 		minetest.get_node_timer(adj):start(spwnr)
 		table.insert(match.spawners, adj)
-		table.insert(state.spawners, adj)
 	end
 
 	-- initialise match timer vars
@@ -798,7 +788,7 @@ eggwars.begin_match = function ()
 	gen_match_hud(key)
 
 	-- persist dirty state in case of crash
-	table.insert(last_state, state)
+	reload = true
 	save_persistant()
 
 	registered_players = {} -- reset
@@ -933,10 +923,13 @@ eggwars.end_match = function(key)
 
 	eggwars.reset(def.arena, def.id)
 
-	-- match over so remove it and remove last state
+	-- remove match
 	eggwars.match[key] = nil
-	last_state[def.id] = nil
+	-- check if this is the last match
+	if list_count(eggwars.match) == 0 then reload = false end
+	-- store data
 	save_persistant()
+	-- finally
 	display_match_results(match_rank, def.arena)
 end
 
