@@ -32,8 +32,10 @@ First copy MTG to a new folder in minetest/games called eggwars and either extra
 * 3D armor [ https://github.com/minetest-mods/3d_armor ]
 * Bows [ https://notabug.org/TenPlus1/bows ]
 
-###### Example bash script for your server using levelDb:
+###### Example bash script for a server using levelDb:
 ![](screenshots/ramdisk.png)
+
+Use ``sudo sh eggwars.sh`` to run the script as root for ramdisk management, sudo commands in the script perform actions as the user to keep things secure.
 
 ## Adding your own arena
 Adding your own arena is easy via the API function ``eggwars.register_arena(def) ``
