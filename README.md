@@ -32,7 +32,7 @@ First copy MTG to a new folder in minetest/games called eggwars and either extra
 * 3D armor [ https://github.com/minetest-mods/3d_armor ]
 * Bows [ https://notabug.org/TenPlus1/bows ]
 
-###### Example bash script for your server:
+###### Example bash script for your server using levelDb:
 ![](screenshots/ramdisk.png)
 
 ## Adding your own arena
