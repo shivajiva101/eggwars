@@ -7,6 +7,10 @@ Each player's goal is to defend their egg and be the last person standing. If a 
 
 When there is one player left standing in a match, they are declared the winner.
 
+![](screenshots/screenshot.png)
+![](screenshots/screenshot_2.png)
+![](screenshots/screenshot_3.png)
+
 ## Features
 * Lobby
 * Multiple match instances
@@ -16,19 +20,21 @@ When there is one player left standing in a match, they are declared the winner.
 * API for adding content
 
 ## Install
-Extract the zip file to mods/ **or** use `git clone https://github.com/shivajiva101/eggwars` from within the mods directory.
+This mod is designed to run on a server with the map running in a ram disk. There is no requirement for persistence of the map data so you should arrange to delete it on every restart, the memory requirements are low with the default arena taking ~5MB all 8 arenas should fit within 56MB.
+
+First copy MTG to a new folder in minetest/games called eggwars and either extract the zip file to mods/ **or** use `git clone https://github.com/shivajiva101/eggwars` from within the mods directory.
 
 * Do **NOT** use an existing world - this will overwrite the mapgen and cause destruction.
-* Do not use a different mapgen mod. This will also cause issues
-* Do use a copy of games/minetest_game called games/eggwars and delete the mods you don't need like beds, boats, bucket, butterflies, carts, dungeon_loot, fireflies, give_initial_stuff, sethome, spawn, vessels, weather
+* Do **NOT** use a different mapgen mod. This will also cause issues
+* Delete the mods you don't need like beds, boats, bucket, butterflies, carts, dungeon_loot, fireflies, give_initial_stuff, sethome, spawn, vessels, weather
 
 ###### Additionally it is highly recommended that you add these mods:
 * 3D armor [ https://github.com/minetest-mods/3d_armor ]
 * Bows [ https://notabug.org/TenPlus1/bows ]
 
-![](screenshots/screenshot.png)
-![](screenshots/screenshot_2.png)
-![](screenshots/screenshot_3.png)
+## Example Script
+![](screenshots/ramdisk.png)
+
 ## Adding your own arena
 Adding your own arena is easy via the API function ``eggwars.register_arena(def) ``
 the default definition can be found in ``register_arena.lua `` and should be used as the reference template for creating your own arenas, it's a keypair table proliferated with comments to help understand what data each key requires. This design concept allows you to use your own schematics for islands, arena hubs and spawner satellites, controlling the positions of all current arena elements. See API.md for more details on this mods API functions and how to use them.
