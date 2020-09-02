@@ -205,7 +205,7 @@ minetest.register_entity("eggwars:trader", {
 			self.object:remove()
 		else
 			local match = eggwars.match[key]
-			if not match.uid == self.uid then
+			if match.uid ~= self.uid then
 				self.object:remove()
 			end
 		end
