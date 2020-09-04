@@ -1107,7 +1107,7 @@ func = function(name, param)
 	if #registered_players < 8 then -- max 8 players in a match
 		if #eggwars.match < 8 then -- max 8 matches on the server
 			for i, v in ipairs(registered_players) do
-				if registered_players[v] == name then
+				if registered_players[i] == name then
 					return true, "You have already registered"
 				end
 			end
