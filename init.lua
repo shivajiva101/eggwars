@@ -460,19 +460,19 @@ local function remove_match_player(name)
 		key = eggwars.player[name]
 		match = eggwars.match[key]
 		player = match.player[name]
-		if player.egg then
-			minetest.remove_node(player.eggpos)
-		end
-		remove_player_hud(name)
-		count = match.alive - 1
-		match.alive = count
-		match.player[name].alive = false
-		match.player[name].egg = false
-		eggwars.match[key] = match
-		eggwars.player[name] = nil
 		if match.alive == 1 then
 			eggwars.end_match(key)
 		else
+			if player.egg then
+				minetest.remove_node(player.eggpos)
+			end
+			remove_player_hud(name)
+			count = match.alive - 1
+			match.alive = count
+			match.player[name].alive = false
+			match.player[name].egg = false
+			eggwars.match[key] = match
+			eggwars.player[name] = nil
 			player = minetest.get_player_by_name(name)
 			player:set_pos(lobby.pos)
 			local msg = name .. " quit the match!"
