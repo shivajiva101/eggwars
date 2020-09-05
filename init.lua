@@ -440,13 +440,14 @@ local function display_stats(name)
 		'label[8,0;Falls]'
 	}
 	for i,v in ipairs(stats.rankings) do
-		fs[#fs + 1] = 'label[0,'..(0.5 * i)..';'.. i ..']'
-		fs[#fs + 1] = 'label[1,'..(0.5 * i)..';'.. v.name ..']'
-		fs[#fs + 1] = 'label[4,'..(0.5 * i)..';'.. v.wins ..']'
-		fs[#fs + 1] = 'label[5,'..(0.5 * i)..';'.. v.kills ..']'
-		fs[#fs + 1] = 'label[6,'..(0.5 * i)..';'.. v.damage ..']'
-		fs[#fs + 1] = 'label[7.1,'..(0.5 * i)..';'.. v.eggs ..']'
-		fs[#fs + 1] = 'label[8,'..(0.5 * i)..';'.. v.falls ..']'
+		local c = 'lime'
+		fs[#fs + 1] = 'label[0,'..(0.5 * i)..';'.. minetest.colorize(c, i) ..']'
+		fs[#fs + 1] = 'label[1,'..(0.5 * i)..';'.. minetest.colorize(c, v.name) ..']'
+		fs[#fs + 1] = 'label[4,'..(0.5 * i)..';'.. minetest.colorize(c, v.wins) ..']'
+		fs[#fs + 1] = 'label[5,'..(0.5 * i)..';'.. minetest.colorize(c, v.kills) ..']'
+		fs[#fs + 1] = 'label[6,'..(0.5 * i)..';'.. minetest.colorize(c, v.damage) ..']'
+		fs[#fs + 1] = 'label[7.1,'..(0.5 * i)..';'.. minetest.colorize(c, v.eggs) ..']'
+		fs[#fs + 1] = 'label[8,'..(0.5 * i)..';'.. minetest.colorize(c, v.falls) ..']'
 		if i == 10 then break end
 	end
 	fs[#fs + 1] = 'button_exit[3.5,6;2,1;btn_e;OK]'
