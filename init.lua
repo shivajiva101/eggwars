@@ -425,6 +425,38 @@ local function display_match_results(match_rank, arena_id)
 	end
 end
 
+--- Displays stats as a formspec
+-- @param name - name of player requesting info
+-- @return nothing
+local function display_stats(name)
+	local fs = {
+		'size[9,7]',
+		'label[0,0;Rank]',
+		'label[1,0;Name]',
+		'label[4,0;Wins]',
+		'label[5,0;Kills]',
+		'label[6,0;Points]',
+		'label[7.1,0;Eggs]',
+		'label[8,0;Falls]'
+	}
+	for i,v in ipairs(stats.rankings) do
+		fs[#fs + 1] = 'label[0,'..(0.5 * i)..';'.. i ..']'
+		fs[#fs + 1] = 'label[1,'..(0.5 * i)..';'.. v.name ..']'
+		fs[#fs + 1] = 'label[4,'..(0.5 * i)..';'.. v.wins ..']'
+		fs[#fs + 1] = 'label[5,'..(0.5 * i)..';'.. v.kills ..']'
+		fs[#fs + 1] = 'label[6,'..(0.5 * i)..';'.. v.damage ..']'
+		fs[#fs + 1] = 'label[7.1,'..(0.5 * i)..';'.. v.eggs ..']'
+		fs[#fs + 1] = 'label[8,'..(0.5 * i)..';'.. v.falls ..']'
+		if i == 10 then break end
+	end
+	fs[#fs + 1] = 'button_exit[3.5,6;2,1;btn_e;OK]'
+	local res = table.concat(fs)
+	local player = minetest.get_player_by_name(name)
+	if player then
+		minetest.show_formspec(name, '', res)
+	end
+end
+
 --- Updates match players game time hud display every minute
 -- @return nothing
 local function update_hud_time()
@@ -1160,6 +1192,15 @@ func = function(name, param)
 		return true, "you have been removed from the queue!"
 	end
 	remove_match_player(name)
+end
+})
+
+-- show stats formspec
+minetest.register_chatcommand("stats", {
+params = "",
+description = "Shows server game statistics",
+func = function(name, param)
+	display_stats(name)
 end
 })
 
