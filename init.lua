@@ -362,6 +362,20 @@ local function match_timer()
 			end
 			eggwars.end_match(key)
 		end
+		for k, v in pairs(def.player) do
+			local player = minetest.get_player_by_name(k)
+			local hp = player:get_hp()
+			if hp > 0 and v.alive then
+				local res = hp + 1
+				local max = player:get_properties().hp_max
+				if res > max then
+					res = max
+				end
+				if hp ~= res then
+					player:set_hp(res)
+				end
+			end
+		end
 	end
 	-- finally retrigger
 	minetest.after(r_rate, match_timer)
