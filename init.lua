@@ -1293,7 +1293,7 @@ minetest.register_on_dieplayer(function(player, reason)
 
 			-- Are we down to 1 player alive yet?
 			if def.alive == 1 then
-				def.player[killer].win = true
+				if killer then def.player[killer].win = true end
 				eggwars.end_match(key)
 			end
 		else
@@ -1361,7 +1361,8 @@ minetest.register_on_player_hpchange(function(player, hp_change, reason)
 			local pname = reason.object:get_player_name()
 			local damage = match.player[pname].damage - hp_change
 			eggwars.match[key].player[pname].damage = damage
-		elseif eggwars.player[name] and reason.type == 'fall' then
+		elseif eggwars.player[name] and reason.type == 'fall'
+		and match.player[name].alive then
 			local falls = match.player[name].falls + 1
 			eggwars.match[key].player[name].falls = falls
 		end
