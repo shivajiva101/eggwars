@@ -267,7 +267,7 @@ end
 -- @param image_string - filename of image
 -- @param timer - time in seconds it displays
 -- @return nothing
-local function add_tmp_image(player, image_string, timer)
+function add_tmp_image(player, image_string, timer)
 	local name = player:get_player_name()
 	tmp_hud[name] = player:hud_add({
 		hud_elem_type = 'image',
