@@ -267,7 +267,7 @@ end
 -- @param image_string - filename of image
 -- @param timer - time in seconds it displays
 -- @return nothing
-function add_tmp_image(player, image_string, timer)
+function eggwars.add_tmp_image(player, image_string, timer)
 	local name = player:get_player_name()
 	tmp_hud[name] = player:hud_add({
 		hud_elem_type = 'image',
@@ -343,7 +343,7 @@ local function match_timer()
 					to_player = k,
 					gain = 1.0,
 				})
-				add_tmp_image(
+				eggwars.add_tmp_image(
 					minetest.get_player_by_name(k),
 					'eggwars_suddendeath.png', 5
 				)
@@ -355,7 +355,7 @@ local function match_timer()
 					to_player = k,
 					gain = 1.0,
 				})
-				add_tmp_image(
+				eggwars.add_tmp_image(
 					minetest.get_player_by_name(k),
 					'eggwars_timeover.png', 5
 				)
@@ -927,7 +927,7 @@ eggwars.end_match = function(key)
 					minetest.chat_send_all(minetest.colorize(
 						"green", "*** " .. name .. " won their match!")
 					)
-					add_tmp_image(player, 'eggwars_winner.png', 5)
+					eggwars.add_tmp_image(player, 'eggwars_winner.png', 5)
 					minetest.sound_play("eggwars_winner", {
 						to_player = pdef.name,
 						gain = 0.5
@@ -1267,7 +1267,7 @@ minetest.register_on_dieplayer(function(player, reason)
 
 			-- set privs for spectating
 			minetest.set_player_privs(name, {fly = true, fast = true, shout = true})
-			add_tmp_image(player, 'eggwars_out.png', 5)
+			eggwars.add_tmp_image(player, 'eggwars_out.png', 5)
 
 			-- record the kill
 			local killer
@@ -1327,7 +1327,7 @@ minetest.register_on_joinplayer(function(player)
 	local name = player:get_player_name()
 	minetest.set_player_privs(name, {shout = true}) --
 	player:set_pos(lobby.pos)
-	add_tmp_image(player, 'eggwars_welcome.png', 10)
+	eggwars.add_tmp_image(player, 'eggwars_welcome.png', 10)
 end)
 
 minetest.register_on_leaveplayer(function(player)
