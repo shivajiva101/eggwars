@@ -83,7 +83,8 @@ for i, v in ipairs(eggwars.arena[1].cs) do
 			eggs = match.player[attacker].eggs + 1
 			match.player[attacker].eggs = eggs
 			msg = victim .. "'s egg was destroyed by " .. attacker
-			eggwars.add_tmp_image(victim, 'eggwars_destroyed.png', 5)
+			eggwars.add_tmp_image(minetest.get_player_by_name(victim),
+				'eggwars_destroyed.png', 5)
 			eggwars.chat_send_match(key, msg)
 			eggwars.update_hud(key, match.player[victim].id)
 			eggwars.match[key] = match
