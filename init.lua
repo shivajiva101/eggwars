@@ -50,7 +50,7 @@ local WP = minetest.get_worldpath()
 local registered_players = {} -- temp prematch buffer
 local schempath = MP.."/schems/"
 local stats = minetest.deserialize(mod_data:get_string('statistics')) or {}
-local reload = mod_data:get_string('dirty') == "true"
+local reload = true
 local tmp_tbl, tmp_hud = {}, {}
 local r_rate = 5
 
