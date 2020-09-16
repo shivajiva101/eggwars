@@ -63,12 +63,8 @@ local function build_form(name, items)
 	local frm = {
 		"formspec_version[3]",
 		"size[6,5.5]",
-		"scrollbaroptions[min=0;max=",
-		(#items * 8) + (#items - 1), -- qty x height + space
-		";smallstep=44;largestep=44;thumbsize=1;arrows=default]",
-		"scrollbar[5,0.5;0.5,4.3;vertical;msb;",
-		context[name].val,
-		"]",
+		"image_button[5,0.5;0.5,0.5;eggwars_up.png;up;]",
+		"image_button[5,4.4;0.5,0.5;eggwars_down.png;down;]",
 		"container[0.5,",
 		context[name].y,
 		"]",
@@ -147,15 +143,18 @@ minetest.register_on_player_receive_fields(function(player, formname, fields)
 				return
 			end
 		end
-		-- scrollbar
-		if formname == TF and fields.msb then
-			local res = minetest.explode_scrollbar_event(fields.msb)
-			if res.type == "CHG" then
-				local val = res.value
-				context[name].y = -val/10
-				context[name].val = val
-				minetest.show_formspec(name, TF, build_form(name, def.shop_items))
+		-- scroll
+		if formname == TF then
+			local y = context[name].y
+			local limit = -4.4 * 5 -- height * number of pages
+			if fields.up and y ~= 0 then
+				y = y + 4.4
+				context[name].y = y
+			elseif fields.down and y > limit then
+				y = y - 4.4
+				context[name].y = y
 			end
+			minetest.show_formspec(name, TF, build_form(name, def.shop_items))
 		end
 
 	elseif formname == BF and fields.btn then
