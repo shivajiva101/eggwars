@@ -66,6 +66,7 @@ dofile(MP.."/register_nodes.lua")
 dofile(MP.."/shop.lua")
 dofile(MP .. "/extender.lua")
 dofile(MP .. "/tools.lua")
+dofile(MP .. "/sprint.lua")
 
 ----------------------
 -- Helper Functions --
