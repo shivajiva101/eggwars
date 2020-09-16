@@ -75,7 +75,7 @@ dofile(MP .. "/sprint.lua")
 --- Sets server conf settings
 -- @return nothing
 local function set_settings()
-	minetest.settings:set('player_transfer_distance', 1)
+	minetest.settings:set('player_transfer_distance', 12)
 	minetest.settings:set('time_speed', 0)
 	minetest.settings:write()
 	minetest.set_timeofday(0.5) -- noon
