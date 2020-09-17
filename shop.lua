@@ -150,11 +150,12 @@ minetest.register_on_player_receive_fields(function(player, formname, fields)
 			if fields.up and y ~= 0 then
 				y = y + 4.4
 				context[name].y = y
+				minetest.show_formspec(name, TF, build_form(name, def.shop_items))
 			elseif fields.down and y > limit then
 				y = y - 4.4
 				context[name].y = y
+				minetest.show_formspec(name, TF, build_form(name, def.shop_items))
 			end
-			minetest.show_formspec(name, TF, build_form(name, def.shop_items))
 		end
 
 	elseif formname == BF and fields.btn then
