@@ -15,6 +15,7 @@ eggwars = {}
 eggwars.arena = {}
 eggwars.armor = minetest.get_modpath("3d_armor") ~= nil
 eggwars.bows = minetest.get_modpath("bows") ~= nil
+eggwars.playertag = minetest.get_modpath("playertag") ~= nil
 eggwars.match = {}
 eggwars.player = {}
 
@@ -767,7 +768,10 @@ eggwars.begin_match = function ()
 
 		initialise_stats(name)
 
-		player:set_nametag_attributes({color = colour})
+		if not eggwars.playertag then
+			player:set_nametag_attributes({color = colour})
+		end
+
 		adj.y = adj.y + 2
 
 		player:set_pos(adj) -- set player position first
@@ -811,7 +815,8 @@ eggwars.begin_match = function ()
 
 		-- Give arena privs
 		minetest.set_player_privs(name, {interact = true, shout = true})
-
+		
+		if eggwars.playertag then playertag.set(player, 1, def.cs[id][2]) end
 	end
 
 	-- Diamond spawners
@@ -930,8 +935,12 @@ eggwars.end_match = function(key)
 					to_player = name,
 					gain = 0.5
 				})
-				player:set_nametag_attributes({
-				color = {a = 255, r = 255, g = 255, b = 255}}) --Make nametag visible
+				if not eggwars.playertag then 
+					player:set_nametag_attributes({
+					color = {a = 255, r = 255, g = 255, b = 255}}) --Make nametag visible
+				else
+					playertag.set(player, 1)
+				end
 				player:set_properties({visual_size = {x = 1, y = 1, z = 1}}) --Make player visible
 			else
 				-- reset player
@@ -1292,7 +1301,11 @@ minetest.register_on_dieplayer(function(player, reason)
 			end
 
 			-- Make nametag invisible
-			player:set_nametag_attributes({color = {a = 0, r = 0, g = 0, b = 0}})
+			if not eggwars.playertag then
+				player:set_nametag_attributes({color = {a = 0, r = 0, g = 0, b = 0}})
+			else
+				playertag.set(player, 0, {a=0,r=0,g=0,b=0})
+			end
 			player:set_properties({visual_size = {x = 0, y = 0}}) --Make player invisible
 
 			if eggwars.armor then eggwars.clear_armor(player) end
@@ -1310,7 +1323,7 @@ minetest.register_on_dieplayer(function(player, reason)
 				if killer then def.player[killer].win = true end
 				eggwars.end_match(key)
 			end
-		else
+		elseif def.player[name].alive and def.player[name].egg then
 			-- Clean inventory & announce
 			eggwars.clear_inventory(player)
 			minetest.chat_send_all("*** " ..
