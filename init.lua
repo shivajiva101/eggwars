@@ -270,7 +270,7 @@ end
 -- @param timer - time in seconds it displays
 -- @return nothing
 function eggwars.add_tmp_image(name, image_string, timer)
-	local player = minetest.get_player_by_name()
+	local player = minetest.get_player_by_name(name)
 	tmp_hud[name] = player:hud_add({
 		hud_elem_type = 'image',
 		position = {x = 0.5, y = 0.5},
