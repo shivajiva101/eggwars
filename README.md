@@ -29,6 +29,8 @@ First copy MTG to a new folder in minetest/games called eggwars and either extra
 * Delete the mods you don't need like beds, boats, bucket, butterflies, carts, dungeon_loot, fireflies, give_initial_stuff, sethome, spawn, vessels, weather
 
 ###### Additionally it is highly recommended that you add these mods:
+* Playertag [https://github.com/shivajiva101/playertag]
+* Gauges [https://github.com/shivajiva101/gauges]
 * 3D armor [ https://github.com/minetest-mods/3d_armor ]
 * Bows [ https://notabug.org/TenPlus1/bows ]
 
@@ -55,9 +57,10 @@ This project was originally started by wilkgr, but after years of inactivity han
 * eggwars_game_over.ogg uses https://freesound.org/s/277403/ by landlucky (CC BY 3.0)
 * eggwars_time_over.ogg uses https://freesound.org/s/437661/ by dersuperanton (CC BY 3.0)
 * eggwars_sudden.ogg uses https://freesound.org/s/476176/ by umdamlar (CC0 1.0)
+* eggwars_crack.ogg uses https://freesound.org/s/444365/ by cj_ascoli (CC0 1.0)
 
 ###### Textures:
-* All textures by shivajiva created with Gimp (CC BY-NC 4.0)
+* Textures by shivajiva, created with Gimp (CC BY-NC 4.0)
 
 ###### Models:
 * Egg mesh by shivajiva, created with Blender (CC BY-NC 4.0)
