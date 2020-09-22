@@ -795,7 +795,7 @@ eggwars.begin_match = function ()
 		meta:set_string('infotext', name .. "'s egg")
 
 		if eggwars.gauges then gauges.add(player) end
-		
+
 		-- Create players shop items table
 		match.player[name].shop_items = {
 			-- Add players wool colour
@@ -819,9 +819,9 @@ eggwars.begin_match = function ()
 
 		-- Give arena privs
 		minetest.set_player_privs(name, {interact = true, shout = true})
-		
+
 		if eggwars.playertag then playertag.set(player, 1, def.cs[id][2]) end
-		
+
 		-- Add home waypoint
 		sp.y = sp.y - 4
 		match.player[name].waypoint = player:hud_add({
@@ -949,7 +949,7 @@ eggwars.end_match = function(key)
 					to_player = name,
 					gain = 0.5
 				})
-				if not eggwars.playertag then 
+				if not eggwars.playertag then
 					player:set_nametag_attributes({
 					color = {a = 255, r = 255, g = 255, b = 255}}) --Make nametag visible
 				else
@@ -1323,7 +1323,7 @@ minetest.register_on_dieplayer(function(player, reason)
 			player:set_properties({visual_size = {x = 0, y = 0}}) --Make player invisible
 
 			if eggwars.gauges then gauges.remove(name) end
-				
+
 			if eggwars.armor then eggwars.clear_armor(player) end
 			def.player[name].alive = false
 			def.alive = def.alive - 1

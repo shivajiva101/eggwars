@@ -29,3 +29,5 @@ minetest.register_tool("eggwars:pick_rainbow", {
 	},
 	on_drop = eggwars.drop_msg,
 })
+
+minetest.register_alias('pick', 'eggwars:pick_rainbow')
