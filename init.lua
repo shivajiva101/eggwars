@@ -254,6 +254,7 @@ local function remove_player_hud(name)
 	end
 	obj:hud_remove(def.remaining)
 	obj:hud_remove(def.pil)
+	obj:hud_remove(def.waypoint)
 end
 
 --- Remove match status flags from players HUD
@@ -820,6 +821,16 @@ eggwars.begin_match = function ()
 		minetest.set_player_privs(name, {interact = true, shout = true})
 		
 		if eggwars.playertag then playertag.set(player, 1, def.cs[id][2]) end
+		
+		-- Add home waypoint
+		sp.y = sp.y - 4
+		match.player[name].waypoint = player:hud_add({
+			hud_elem_type = "waypoint",
+			name = 'Home',
+			text = "m",
+			number = def.cs[id][4],
+			world_pos = sp,
+		})
 	end
 
 	-- Diamond spawners
