@@ -1412,6 +1412,16 @@ minetest.register_on_player_hpchange(function(player, hp_change, reason)
 	end
 end, false)
 
+
+-- knockback override for match players
+local old_calculate_knockback = minetest.calculate_knockback
+function minetest.calculate_knockback(player, ...)
+	if eggwars.player[player:get_player_name()] then
+		return 3
+	end
+	return old_calculate_knockback(player, ...)
+end
+
 -- run functions after all mods are loaded!
 minetest.after(0, modify_game)
 minetest.after(0, set_settings)
