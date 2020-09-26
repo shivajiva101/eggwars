@@ -8,10 +8,8 @@ minetest.register_globalstep(function(dtime)
 		if sprint then
 			players[name] = true
 			player:set_physics_override({speed = 1.3})
-			player:set_fov(1.2, true, 0.1)
 		elseif players[name] then
 			player:set_physics_override({speed = 1})
-			player:set_fov(1, true, 0.1)
 			players[name] = nil
 		end
 	end
