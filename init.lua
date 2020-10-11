@@ -52,7 +52,8 @@ local WP = minetest.get_worldpath()
 local registered_players = {} -- temp prematch buffer
 local schempath = MP.."/schems/"
 local stats = minetest.deserialize(mod_data:get_string('statistics')) or {}
-local reload = true
+local dev = false -- set this to true if testing locally
+local reload = dev == false
 local tmp_tbl, tmp_hud = {}, {}
 local r_rate = 5
 
@@ -404,10 +405,10 @@ local function initialise_stats(name)
 end
 
 --- Displays match results as a formspec
--- @param match_rank - table of ranked match players
+-- @param match - table of ranked match players
 -- @param arena_id - integer index of arena
 -- @return nothing
-local function display_match_results(match_rank, arena_id)
+local function display_match_results(match, arena_id)
 	local get_player_by_name = minetest.get_player_by_name
 	local fs = {
 		'size[8,6]',
@@ -418,7 +419,7 @@ local function display_match_results(match_rank, arena_id)
 		'label[6.1,0;Eggs]',
 		'label[7,0;Falls]'
 	}
-	for i, v in ipairs(match_rank) do
+	for i, v in ipairs(match) do
 		local c = eggwars.arena[arena_id].colour[v.id]
 		fs[#fs + 1] = 'label[0,'..(0.5 * i)..';'..eggwars.colorize(c, i)..']'
 		fs[#fs + 1] = 'label[1,'..(0.5 * i)..';'..eggwars.colorize(c, v.name)..']'
@@ -429,7 +430,7 @@ local function display_match_results(match_rank, arena_id)
 	end
 	fs[#fs + 1] = 'button_exit[3,5;2,1;btn_e;OK]'
 	local res = table.concat(fs)
-	for i, v in ipairs(match_rank) do
+	for i, v in ipairs(match) do
 		local player = get_player_by_name(v.name)
 		if player then
 			minetest.show_formspec(v.name, '', res)
@@ -702,6 +703,7 @@ eggwars.begin_match = function ()
 	--		spawn = spawn point
 	--		spawner = pos of gold spawner
 	--		trader = entity obj
+	--		winner = integer
 	--
 	-- match.spawners - diamond and ruby spawner positions
 	-- match.stats - match statistics
@@ -767,6 +769,7 @@ eggwars.begin_match = function ()
 		match.player[name].rate = spwnr
 		match.player[name].shop_items = {}
 		match.player[name].spawn = sp
+		match.player[name].winner = 0
 
 		initialise_stats(name)
 
@@ -794,7 +797,7 @@ eggwars.begin_match = function ()
 		meta:set_string('owner', name)
 		meta:set_string('infotext', name .. "'s egg")
 
-		if eggwars.gauges then gauges.add(player) end
+		if eggwars.gauges then gauges.add(player) end -- luacheck: ignore
 
 		-- Create players shop items table
 		match.player[name].shop_items = {
@@ -808,7 +811,11 @@ eggwars.begin_match = function ()
 				},
 				description = def.cs[id][1] .. " Wool",
 				image = 'wool_' .. def.cs[id][3] .. '.png',
-				cost = {name = "default:gold_ingot", count = 5, wear = 0, metadata = ""},
+				cost = {name = "default:gold_ingot",
+					count = 5,
+					wear = 0,
+					metadata = ""
+				},
 				entry = 0,
 			}
 		}
@@ -820,7 +827,10 @@ eggwars.begin_match = function ()
 		-- Give arena privs
 		minetest.set_player_privs(name, {interact = true, shout = true})
 
-		if eggwars.playertag then playertag.set(player, 1, def.cs[id][2]) end
+		-- Set playertag colour
+		if eggwars.playertag then
+			playertag.set(player, 1, def.cs[id][2]) -- luacheck: ignore
+		end
 
 		-- Add home waypoint
 		sp.y = sp.y - 4
@@ -833,7 +843,7 @@ eggwars.begin_match = function ()
 		})
 	end
 
-	-- Diamond spawners
+	-- Add diamond spawners
 	spwnr = def.spawners.diamond.rate
 	for idx, v in ipairs(def.spawners.diamond) do
 		adj = vector.add(pos, v)
@@ -842,7 +852,7 @@ eggwars.begin_match = function ()
 		table.insert(match.spawners, adj)
 	end
 
-	-- Ruby spawners
+	-- Add ruby spawners
 	spwnr = def.spawners.ruby.rate
 	for idx, v in ipairs(def.spawners.ruby) do
 		adj = vector.add(pos, v)
@@ -880,8 +890,7 @@ end
 eggwars.end_match = function(key)
 
 	local def = eggwars.match[key]
-	local match_rank = {}
-	local windex
+	local match = {}
 
 	remove_match_hud(key)
 	eggwars.match[key].uid = 0
@@ -898,48 +907,40 @@ eggwars.end_match = function(key)
 	end
 
 	for name, pdef in pairs(def.player) do
-		--stop island spawner
+
+		--stop gold spawner
 		minetest.get_node_timer(pdef.spawner):stop()
-		-- remove objects on gold spawner
+
+		-- remove objects around spawner
 		local w = minetest.get_objects_inside_radius(pdef.spawner, 2)
 		for _, obj in ipairs(w) do
 			if not obj:is_player() then
 				obj:remove()
 			end
 		end
-		-- remove spawner node
+
+		-- remove spawner
 		minetest.remove_node(pdef.spawner)
-		-- Update stats
+
+		-- Update global stats
 		local s = stats.player[name]
 		s.kills = s.kills + pdef.kills
 		s.falls = s.falls + pdef.falls
 		s.damage = s.damage + pdef.damage
 		s.plays = s.plays + 1
-
-		if pdef.win then
-			s.wins = s.wins + 1
-		end
+		s.wins = s.wins + pdef.winner
 
 		-- rank match player
-		local res = {
+		local record = {
 			damage = pdef.damage,
 			eggs = pdef.eggs,
 			falls = pdef.falls,
 			id = pdef.id, -- colour ref
 			kills = pdef.kills,
 			name = name,
-			win = pdef.win or false
+			win = pdef.winner
 		}
-		local idx = #match_rank + 1
-
-		for i, v in ipairs(match_rank) do
-			if v.win then windex = i end
-			if res.kills > v.kills then
-				idx = i
-				break
-			end
-		end
-		table.insert(match_rank, idx, res)
+		table.insert(match, record)
 
 		local player = minetest.get_player_by_name(name)
 		if player then
@@ -953,14 +954,14 @@ eggwars.end_match = function(key)
 					player:set_nametag_attributes({
 					color = {a = 255, r = 255, g = 255, b = 255}}) --Make nametag visible
 				else
-					playertag.set(player, 1)
+					playertag.set(player, 1) -- luacheck: ignore
 				end
 				player:set_properties({visual_size = {x = 1, y = 1, z = 1}}) --Make player visible
 			else
 				-- reset player
 				if eggwars.armor then eggwars.clear_armor(player) end
 				eggwars.clear_inventory(player)
-				if pdef.win then
+				if pdef.winner == 1 then
 					minetest.chat_send_all(minetest.colorize(
 						"green", "*** " .. name .. " won their match!")
 					)
@@ -979,29 +980,58 @@ eggwars.end_match = function(key)
 	end
 
 	-- rank winner
-	local tmp
-
-	if windex then
-		tmp = match_rank[windex]
-		table.remove(match_rank, windex)
-		table.insert(match_rank, 1, tmp)
-	else
-		tmp = match_rank[1]
+	table.sort(match, function(a, b)
+		return a.winner > b.winner
+	end)
+	if match[1].winner == 0 then
+		-- on kills
+		table.sort(stats.rankings, function(a, b)
+			return a.kills > b.kills
+		end)
+		-- check winner
+		if match[1].kills == 0 then
+			-- resort for damage
+			table.sort(stats.rankings, function(a, b)
+				return a.damage > b.damage
+			end)
+		end
 	end
 
-	local rank = {
-		damage = tmp.damage,
-		eggs = tmp.eggs,
-		falls = tmp.falls,
-		kills = tmp.kills,
-		name = tmp.name,
-		wins = stats.player[tmp.name].wins
-	}
-	table.insert(stats.rankings, rank)
-	if #stats.rankings > 1 then
-		table.sort(stats.rankings, function(a, b) return a.wins > b.wins end)
-		if #stats.rankings > 20 then
-			table.remove(stats.rankings, #stats.rankings)
+	local tmp = match[1]
+
+	if tmp.winner == 1 then
+		local rank = {
+			damage = tmp.damage,
+			eggs = tmp.eggs,
+			falls = tmp.falls,
+			kills = tmp.kills,
+			name = tmp.name,
+			wins = stats.player[tmp.name].wins
+		}
+		local new_entry = true
+		for i,v in ipairs(stats.rankings) do
+			if v.name == rank.name then
+				-- update entry
+				new_entry = false
+				v.damage = v.damage + rank.damage
+				v.eggs = v.eggs + rank.eggs
+				v.falls = v.falls + rank.falls
+				v.kills = v.kills + rank.kills
+				v.wins = rank.wins
+			end
+		end
+
+		if new_entry then
+			table.insert(stats.rankings, rank)
+		end
+
+		if #stats.rankings > 1 then
+			table.sort(stats.rankings, function(a, b)
+				return a.wins > b.wins
+			end)
+			if #stats.rankings > 20 then
+				table.remove(stats.rankings, #stats.rankings)
+			end
 		end
 	end
 
@@ -1014,7 +1044,7 @@ eggwars.end_match = function(key)
 	-- store data
 	save_persistant()
 	-- finally
-	display_match_results(match_rank, def.arena)
+	display_match_results(match, def.arena)
 end
 
 --- Colour a message string using rgb
@@ -1318,11 +1348,11 @@ minetest.register_on_dieplayer(function(player, reason)
 			if not eggwars.playertag then
 				player:set_nametag_attributes({color = {a = 0, r = 0, g = 0, b = 0}})
 			else
-				playertag.set(player, 0, {a=0,r=0,g=0,b=0})
+				playertag.set(player, 0, {a=0,r=0,g=0,b=0}) -- luacheck: ignore
 			end
 			player:set_properties({visual_size = {x = 0, y = 0}}) --Make player invisible
 
-			if eggwars.gauges then gauges.remove(name) end
+			if eggwars.gauges then gauges.remove(name) end -- luacheck: ignore
 
 			if eggwars.armor then eggwars.clear_armor(player) end
 			def.player[name].alive = false
@@ -1336,7 +1366,7 @@ minetest.register_on_dieplayer(function(player, reason)
 
 			-- Are we down to 1 player alive yet?
 			if def.alive == 1 then
-				if killer then def.player[killer].win = true end
+				if killer then def.player[killer].winner = 1 end
 				eggwars.end_match(key)
 			end
 		elseif def.player[name].alive and def.player[name].egg then
@@ -1415,7 +1445,7 @@ end, false)
 
 -- knockback override for match players
 local old_calculate_knockback = minetest.calculate_knockback
-function minetest.calculate_knockback(player, ...)
+function minetest.calculate_knockback(player, ...) -- luacheck: ignore
 	if eggwars.player[player:get_player_name()] then
 		return 3
 	end
