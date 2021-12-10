@@ -3,7 +3,7 @@
 ## What this is
 This mod is inspired by the Minecraft mod of the same name and has similar features.
 
-Each player's goal is to defend their egg and be the last person standing. If a player dies - either from being killed by another player or falling off - they will re-spawn whilst their egg is intact. If it is not intact, they experience match death and enter into spectator mode.
+Each player's goal is to defend their egg and be the last person standing. If a player dies either from being killed by another player or falling off, they will re-spawn whilst their egg is intact, if it has been destroyed, they experience match death and enter into spectator mode.
 
 When there is one player left standing in a match, they are declared the winner.
 
